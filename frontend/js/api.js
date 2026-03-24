@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://adaptive-coding-platform.onrender.com';
 
 // save token to localStorage
 function saveToken(token) {
