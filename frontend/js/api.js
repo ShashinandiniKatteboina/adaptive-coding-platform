@@ -78,6 +78,14 @@ const problems = {
 
 // SUBMISSIONS API calls
 const submissions = {
+   run: async (language, code, input) => {
+    const res = await fetch(`${API_URL}/submissions/run`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ language, code, input })
+    });
+    return res.json();
+   },
   submit: async (problem_id, language, code) => {
     const res = await fetch(`${API_URL}/submissions`, {
       method: 'POST',
