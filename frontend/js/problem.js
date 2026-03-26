@@ -286,25 +286,42 @@ function resetCode() {
   const lang = document.getElementById('language-select').value;
   editor.setValue(defaultCode[lang]);
 }
-// Function to load a past submission back into the Monaco Editor
+// Function to show past submission in a Modal popup (LeetCode style)
 function viewPastSubmission(index) {
   const submission = currentSubmissions[index];
-  
   if (!submission || !submission.code) return;
 
-  // 1. Change the dropdown menu to match the language they submitted in
-  const langSelect = document.getElementById('language-select');
-  langSelect.value = submission.language;
+  // 1. Set the Title/Status (Color it green if accepted, red if wrong)
+  const statusEl = document.getElementById('modal-status');
+  statusEl.textContent = submission.status;
+  if (submission.status.toLowerCase() === 'accepted') {
+    statusEl.style.color = '#4ade80'; // Green
+  } else {
+    statusEl.style.color = '#f87171'; // Red
+  }
 
-  // 2. Tell Monaco Editor to switch its syntax highlighting to that language
-  const monacoLang = submission.language === 'cpp' ? 'cpp' : submission.language === 'c' ? 'c' : submission.language;
-  monaco.editor.setModelLanguage(editor.getModel(), monacoLang);
+  // 2. Fill in the details
+  document.getElementById('modal-lang').textContent = submission.language;
+  const execTime = submission.execution_time ? parseFloat(submission.execution_time).toFixed(3) + 's' : 'N/A';
+  document.getElementById('modal-time').textContent = execTime;
+  document.getElementById('modal-date').textContent = new Date(submission.submitted_at).toLocaleString();
+  
+  // 3. Put the code in the read-only block
+  document.getElementById('modal-code').textContent = submission.code;
 
-  // 3. Paste their old code into the editor
-  editor.setValue(submission.code);
+  // 4. Show the modal
+  document.getElementById('submission-modal').style.display = 'block';
+}
 
-  // 4. Show a friendly message in the result box
-  const resultContent = document.getElementById('result-content');
-  resultContent.innerHTML = `<span style="color:#6366f1;">Loaded past ${submission.status} submission from ${new Date(submission.submitted_at).toLocaleString()}</span>`;
-  showTab('result');
+// Function to close the modal
+function closeModal() {
+  document.getElementById('submission-modal').style.display = 'none';
+}
+
+// Close the modal if the user clicks anywhere outside of it
+window.onclick = function(event) {
+  const modal = document.getElementById('submission-modal');
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
 }
