@@ -1,9 +1,9 @@
 requireAuth();
-
 let editor;
 let currentProblemId;
 let currentExamples = [];
 let currentProblemLabels = []; // labels for each input line (e.g. ['nums', 'target'])
+let currentSubmissions =[]; // Add this new variable to store past submissions
 
 const defaultCode = {
   python: '# Write your solution here\n\n',
@@ -137,23 +137,31 @@ async function loadProblem() {
 async function loadMySubmissions(problemId) {
   try {
     const data = await submissions.getMySubmissions();
-    const mySubmissions = data.filter(s => String(s.problem_id) === String(problemId));
+    // Save to our global variable so we can access the code when clicked
+    currentSubmissions = data.filter(s => String(s.problem_id) === String(problemId));
 
     const container = document.getElementById('submissions-list');
-    if (mySubmissions.length === 0) {
+    if (currentSubmissions.length === 0) {
       container.innerHTML = '<p style="color:#555; font-size:14px;">No submissions yet.</p>';
       return;
     }
 
     let html = '';
-    mySubmissions.slice(0, 5).forEach(s => {
-      const date = new Date(s.submitted_at).toLocaleDateString();
+    currentSubmissions.slice(0, 5).forEach((s, index) => {
+      // Changed to toLocaleString() to show both Date AND Time
+      const dateAndTime = new Date(s.submitted_at).toLocaleString(); 
+      
+      // Added cursor:pointer, hover effects, and onclick="viewPastSubmission(index)"
       html += `
-        <div style="display:flex; justify-content:space-between; align-items:center;
-             padding:8px 12px; background:#0f0f23; border-radius:8px; margin-bottom:8px;">
+        <div onclick="viewPastSubmission(${index})" 
+             style="display:flex; justify-content:space-between; align-items:center;
+             padding:8px 12px; background:#0f0f23; border-radius:8px; margin-bottom:8px; 
+             cursor:pointer; border: 1px solid transparent; transition: border 0.2s;"
+             onmouseover="this.style.border='1px solid #6366f1'" 
+             onmouseout="this.style.border='1px solid transparent'">
           <span class="badge badge-${s.status}">${s.status}</span>
           <span style="color:#a0a0b0; font-size:13px;">${s.language}</span>
-          <span style="color:#555; font-size:12px;">${date}</span>
+          <span style="color:#555; font-size:12px;">${dateAndTime}</span>
         </div>
       `;
     });
@@ -162,7 +170,6 @@ async function loadMySubmissions(problemId) {
     console.log('Could not load submissions');
   }
 }
-
 // RUN against visible example test cases only
 async function runCode() {
   const language = document.getElementById('language-select').value;
@@ -189,7 +196,7 @@ async function runCode() {
     for (let i = 0; i < currentExamples.length; i++) {
       const ex = currentExamples[i];
 
-      const res = await fetch('http://localhost:5000/api/submissions/run', {
+      const res = await fetch('https://adaptive-coding-platform.onrender.com/api/submissions/run', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -305,4 +312,43 @@ async function submitCode() {
 function resetCode() {
   const lang = document.getElementById('language-select').value;
   editor.setValue(defaultCode[lang]);
+}
+// Function to show past submission in a Modal popup (LeetCode style)
+function viewPastSubmission(index) {
+  const submission = currentSubmissions[index];
+  if (!submission || !submission.code) return;
+
+  // 1. Set the Title/Status (Color it green if accepted, red if wrong)
+  const statusEl = document.getElementById('modal-status');
+  statusEl.textContent = submission.status;
+  if (submission.status.toLowerCase() === 'accepted') {
+    statusEl.style.color = '#4ade80'; // Green
+  } else {
+    statusEl.style.color = '#f87171'; // Red
+  }
+
+  // 2. Fill in the details
+  document.getElementById('modal-lang').textContent = submission.language;
+  const execTime = submission.execution_time ? parseFloat(submission.execution_time).toFixed(3) + 's' : 'N/A';
+  document.getElementById('modal-time').textContent = execTime;
+  document.getElementById('modal-date').textContent = new Date(submission.submitted_at).toLocaleString();
+  
+  // 3. Put the code in the read-only block
+  document.getElementById('modal-code').textContent = submission.code;
+
+  // 4. Show the modal
+  document.getElementById('submission-modal').style.display = 'block';
+}
+
+// Function to close the modal
+function closeModal() {
+  document.getElementById('submission-modal').style.display = 'none';
+}
+
+// Close the modal if the user clicks anywhere outside of it
+window.onclick = function(event) {
+  const modal = document.getElementById('submission-modal');
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
 }
