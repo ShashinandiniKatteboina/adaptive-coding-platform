@@ -1,8 +1,8 @@
 requireAuth();
-
 let editor;
 let currentProblemId;
 let currentExamples = [];
+let currentSubmissions =[]; // Add this new variable to store past submissions
 
 const defaultCode = {
   python: '# Write your solution here\n\n',
@@ -114,23 +114,31 @@ async function loadProblem() {
 async function loadMySubmissions(problemId) {
   try {
     const data = await submissions.getMySubmissions();
-    const mySubmissions = data.filter(s => String(s.problem_id) === String(problemId));
+    // Save to our global variable so we can access the code when clicked
+    currentSubmissions = data.filter(s => String(s.problem_id) === String(problemId));
 
     const container = document.getElementById('submissions-list');
-    if (mySubmissions.length === 0) {
+    if (currentSubmissions.length === 0) {
       container.innerHTML = '<p style="color:#555; font-size:14px;">No submissions yet.</p>';
       return;
     }
 
     let html = '';
-    mySubmissions.slice(0, 5).forEach(s => {
-      const date = new Date(s.submitted_at).toLocaleDateString();
+    currentSubmissions.slice(0, 5).forEach((s, index) => {
+      // Changed to toLocaleString() to show both Date AND Time
+      const dateAndTime = new Date(s.submitted_at).toLocaleString(); 
+      
+      // Added cursor:pointer, hover effects, and onclick="viewPastSubmission(index)"
       html += `
-        <div style="display:flex; justify-content:space-between; align-items:center;
-             padding:8px 12px; background:#0f0f23; border-radius:8px; margin-bottom:8px;">
+        <div onclick="viewPastSubmission(${index})" 
+             style="display:flex; justify-content:space-between; align-items:center;
+             padding:8px 12px; background:#0f0f23; border-radius:8px; margin-bottom:8px; 
+             cursor:pointer; border: 1px solid transparent; transition: border 0.2s;"
+             onmouseover="this.style.border='1px solid #6366f1'" 
+             onmouseout="this.style.border='1px solid transparent'">
           <span class="badge badge-${s.status}">${s.status}</span>
           <span style="color:#a0a0b0; font-size:13px;">${s.language}</span>
-          <span style="color:#555; font-size:12px;">${date}</span>
+          <span style="color:#555; font-size:12px;">${dateAndTime}</span>
         </div>
       `;
     });
@@ -139,7 +147,6 @@ async function loadMySubmissions(problemId) {
     console.log('Could not load submissions');
   }
 }
-
 // RUN against visible example test cases only
 async function runCode() {
   const language = document.getElementById('language-select').value;
@@ -278,4 +285,26 @@ async function submitCode() {
 function resetCode() {
   const lang = document.getElementById('language-select').value;
   editor.setValue(defaultCode[lang]);
+}
+// Function to load a past submission back into the Monaco Editor
+function viewPastSubmission(index) {
+  const submission = currentSubmissions[index];
+  
+  if (!submission || !submission.code) return;
+
+  // 1. Change the dropdown menu to match the language they submitted in
+  const langSelect = document.getElementById('language-select');
+  langSelect.value = submission.language;
+
+  // 2. Tell Monaco Editor to switch its syntax highlighting to that language
+  const monacoLang = submission.language === 'cpp' ? 'cpp' : submission.language === 'c' ? 'c' : submission.language;
+  monaco.editor.setModelLanguage(editor.getModel(), monacoLang);
+
+  // 3. Paste their old code into the editor
+  editor.setValue(submission.code);
+
+  // 4. Show a friendly message in the result box
+  const resultContent = document.getElementById('result-content');
+  resultContent.innerHTML = `<span style="color:#6366f1;">Loaded past ${submission.status} submission from ${new Date(submission.submitted_at).toLocaleString()}</span>`;
+  showTab('result');
 }

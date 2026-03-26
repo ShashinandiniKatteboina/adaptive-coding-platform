@@ -100,13 +100,13 @@ exports.submitCode = async (req, res) => {
 exports.getUserSubmissions = async (req, res) => {
   try {
     const result = await pool.query(
+      // We added s.code here so the frontend can receive the submitted code
       `SELECT s.id, p.title, s.language, s.status,
-       s.execution_time, s.submitted_at, s.problem_id
+       s.execution_time, s.submitted_at, s.problem_id, s.code
        FROM submissions s
        JOIN problems p ON s.problem_id = p.id
        WHERE s.user_id = $1
-       ORDER BY s.submitted_at DESC`,
-      [req.user.id]
+       ORDER BY s.submitted_at DESC`,[req.user.id]
     );
     res.json(result.rows);
   } catch (err) {

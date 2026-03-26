@@ -455,3 +455,30 @@ nav {
 .topic-badge { background: #1e1b4b; color: #818cf8; padding: 3px 10px; border-radius: 20px; font-size: 12px; text-transform: capitalize; }
 .problem-description { border: 1px solid #2d2d44; }
 .result-box { border: 1px solid #2d2d44; }
+.footer {
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+    background-color: transparent; /* Keeps the background consistent */
+    color: #a5a5a5;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    position: absolute;
+    bottom: 0;
+}
+
+.team-links {
+    margin-top: 8px;
+}
+
+.team-links a {
+    color: #7c73e6; /* Matches your login button color */
+    text-decoration: none;
+    margin: 0 10px;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.team-links a:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
