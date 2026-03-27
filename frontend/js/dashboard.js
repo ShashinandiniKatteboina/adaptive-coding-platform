@@ -1,144 +1,228 @@
-// logout function is now handled by api.js renderNavbar
+// Dashboard logic
 
-// load everything when page opens
 async function loadDashboard() {
-  const user = getUser();
-  if (user) {
-    document.getElementById('welcome-msg').textContent =
-      `Welcome back, ${user.name}! You've solved ${document.getElementById('total-solved')?.textContent || 0} problems so far.`;
-  }
-
-  await Promise.all([
-    loadProgress(),
-    loadRecommendations(),
-    loadRecentSubmissions()
-  ]);
+  requireAuth();
+  await Promise.all([loadProgress(), loadRecentSubmissions(), loadRecommendations()]);
 }
 
-// load user progress
+// ── Progress / ring / heatmap ──────────────────────────────
 async function loadProgress() {
   try {
     const data = await progress.getProgress();
 
-    let totalEasy = 0;
-    let totalMedium = 0;
-    let totalHard = 0;
-
-    const topicContainer = document.getElementById('topic-progress');
-
-    if (!data || data.length === 0) {
-      topicContainer.innerHTML = '<p class="empty-state">No progress yet. Start solving problems!</p>';
-      return;
-    }
-
+    let totalEasy = 0, totalMedium = 0, totalHard = 0;
     let topicHTML = '';
 
-    data.forEach(p => {
-      totalEasy += (p.easy_solved || 0);
-      totalMedium += (p.medium_solved || 0);
-      totalHard += (p.hard_solved || 0);
-
-      const total = (p.easy_solved || 0) + (p.medium_solved || 0) + (p.hard_solved || 0);
-      const maxProblems = 20; // Increased for better scale
-      const percent = Math.min(Math.round((total / maxProblems) * 100), 100);
-
-      topicHTML += `
-        <div class="progress-item" style="margin-bottom:20px;">
-          <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-            <span style="text-transform:capitalize; font-size:15px; font-weight:600; color:#1e293b;">${p.topic}</span>
-            <span style="color:#64748b; font-size:13px;">
-              ${p.easy_solved || 0} E · ${p.medium_solved || 0} M · ${p.hard_solved || 0} H
-            </span>
-          </div>
-          <div class="progress-bar-container" style="background:#f1f5f9; height:10px; border-radius:10px;">
-            <div class="progress-bar" style="width:${percent}%; background:#6366f1; height:100%; border-radius:10px;"></div>
-          </div>
-        </div>
-      `;
-    });
-
-    topicContainer.innerHTML = topicHTML;
-
-    // update stat cards
-    document.getElementById('easy-solved').textContent = totalEasy;
-    document.getElementById('medium-solved').textContent = totalMedium;
-    document.getElementById('hard-solved').textContent = totalHard;
-    document.getElementById('total-solved').textContent = totalEasy + totalMedium + totalHard;
-
-  } catch (err) {
-    document.getElementById('topic-progress').innerHTML = '<p class="error-msg">Failed to load progress.</p>';
-  }
-}
-
-// load recommendations
-async function loadRecommendations() {
-  try {
-    const data = await progress.getRecommendations();
-    const container = document.getElementById('recommendations');
-
     if (!data || data.length === 0) {
-      container.innerHTML = '<p class="empty-state">Solve more problems to get recommendations.</p>';
-      return;
+      document.getElementById('topic-progress').innerHTML =
+        '<p style="color:#475569; font-size:13px;">No progress yet. Start solving!</p>';
+    } else {
+      data.forEach(p => {
+        totalEasy   += (p.easy_solved   || 0);
+        totalMedium += (p.medium_solved || 0);
+        totalHard   += (p.hard_solved   || 0);
+
+        const total = (p.easy_solved || 0) + (p.medium_solved || 0) + (p.hard_solved || 0);
+        const percent = Math.min(Math.round((total / 20) * 100), 100);
+
+        topicHTML += `
+          <div style="margin-bottom:16px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+              <span style="text-transform:capitalize; font-size:14px; font-weight:600; color:#e2e8f0;">${p.topic}</span>
+              <span style="color:#475569; font-size:12px;">${p.easy_solved||0}E · ${p.medium_solved||0}M · ${p.hard_solved||0}H</span>
+            </div>
+            <div style="background:#0f172a; height:8px; border-radius:8px;">
+              <div style="width:${percent}%; background:#6366f1; height:100%; border-radius:8px;"></div>
+            </div>
+          </div>`;
+      });
+      document.getElementById('topic-progress').innerHTML = topicHTML;
     }
 
-    let html = '';
-    data.slice(0, 3).forEach(problem => {
-      html += `
-        <div class="rec-card" onclick="window.location.href='problem.html?id=${problem.id}'"
-          style="padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;
-          margin-bottom:12px; cursor:pointer; transition:all 0.2s; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-weight:600; color:#1e293b;">${problem.title}</span>
-          <span class="badge badge-${problem.difficulty.toLowerCase()}">${problem.difficulty}</span>
-        </div>
-      `;
-    });
+    const total = totalEasy + totalMedium + totalHard;
+    // Approximate total problems in platform
+    const easyTotal = 933, medTotal = 2030, hardTotal = 916;
+    const maxTotal = easyTotal + medTotal + hardTotal;
+    const circ = 2 * Math.PI * 50; // circumference for r=50
 
-    container.innerHTML = html;
+    // Update ring center text
+    document.getElementById('ring-total-num').textContent = total;
+    document.getElementById('ring-total-max').textContent = maxTotal;
+
+    // Difficulty numbers
+    document.getElementById('d-easy').textContent   = totalEasy;
+    document.getElementById('d-medium').textContent = totalMedium;
+    document.getElementById('d-hard').textContent   = totalHard;
+    document.getElementById('d-easy-total').textContent   = easyTotal;
+    document.getElementById('d-medium-total').textContent = medTotal;
+    document.getElementById('d-hard-total').textContent   = hardTotal;
+
+    // Animated arcs — stack them with dashoffset
+    const easyFrac   = (totalEasy   / maxTotal) * circ;
+    const medFrac    = (totalMedium / maxTotal) * circ;
+    const hardFrac   = (totalHard   / maxTotal) * circ;
+    const easyOffset  = 0;
+    const medOffset   = easyFrac;
+    const hardOffset  = easyFrac + medFrac;
+
+    setTimeout(() => {
+      setArc('ring-easy',   easyFrac,  circ, easyOffset);
+      setArc('ring-medium', medFrac,   circ, medOffset);
+      setArc('ring-hard',   hardFrac,  circ, hardOffset);
+    }, 100);
+
+    // Badge name based on total
+    const badgeName = total >= 100 ? '100 Days Badge' : total >= 50 ? '50 Days Badge 2025' : 'Active Solver';
+    document.getElementById('badge-name').textContent = badgeName;
+
+    // Attempting = topics with partial progress
+    const attempting = data.filter(p => (p.easy_solved||0)+(p.medium_solved||0)+(p.hard_solved||0) > 0).length;
+    document.getElementById('attempting-count').textContent = attempting;
 
   } catch (err) {
-    document.getElementById('recommendations').innerHTML = '<p class="error-msg">Failed to load recommendations.</p>';
+    document.getElementById('topic-progress').innerHTML = '<p style="color:#ef4444;">Failed to load progress.</p>';
   }
 }
 
-// load recent submissions
+function setArc(id, filled, total, offset) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.strokeDasharray = `${filled} ${total - filled}`;
+  el.style.strokeDashoffset = -offset;
+}
+
+// ── Recent Submissions + Heatmap ──────────────────────────
 async function loadRecentSubmissions() {
   try {
     const data = await submissions.getMySubmissions();
     const container = document.getElementById('recent-submissions');
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<p class="empty-state">No submissions yet.</p>';
+      container.innerHTML = '<p style="color:#475569; font-size:13px;">No submissions yet.</p>';
+      buildHeatmap([]);
       return;
     }
 
-    let html = `
-      <table class="problems-table dashboard-table">
-        <thead>
-          <tr>
-            <th>Problem</th>
-            <th>Status</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody>
-    `;
+    // Update heatmap with all submissions
+    buildHeatmap(data);
 
-    data.slice(0, 5).forEach(s => {
-      const date = new Date(s.submitted_at).toLocaleDateString();
+    // Recent 5 for the list
+    const recent = data.slice(0, 5);
+    let html = '';
+    recent.forEach(s => {
+      const date = new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const statusColor = s.status === 'accepted' ? '#4ade80' : s.status === 'partial' ? '#fbbf24' : '#f87171';
       html += `
-        <tr>
-          <td style="font-weight:600; color:#1e293b;">${s.title}</td>
-          <td><span class="status-badge-${s.status.toLowerCase()}">${s.status}</span></td>
-          <td style="color:#64748b; font-size:13px;">${date}</td>
-        </tr>
-      `;
+        <div class="sub-row">
+          <span class="sub-title">${s.title || 'Problem #' + s.problem_id}</span>
+          <span style="color:${statusColor}; font-size:12px; font-weight:600;">${s.status.toUpperCase()}</span>
+          <span class="sub-date">${date}</span>
+        </div>`;
     });
+    container.innerHTML = html;
 
-    html += '</tbody></table>';
+    // Stats
+    const activeDays = new Set(data.map(s => new Date(s.submitted_at).toDateString())).size;
+    document.getElementById('heatmap-total').textContent = data.length;
+    document.getElementById('active-days').textContent = activeDays;
+    document.getElementById('max-streak').textContent = calcMaxStreak(data);
+
+  } catch (err) {
+    document.getElementById('recent-submissions').innerHTML = '<p style="color:#ef4444;">Failed to load submissions.</p>';
+    buildHeatmap([]);
+  }
+}
+
+function calcMaxStreak(data) {
+  if (!data.length) return 0;
+  const days = [...new Set(data.map(s => new Date(s.submitted_at).toDateString()))].map(d => new Date(d)).sort((a, b) => a - b);
+  let max = 1, cur = 1;
+  for (let i = 1; i < days.length; i++) {
+    const diff = (days[i] - days[i-1]) / 86400000;
+    if (diff === 1) { cur++; max = Math.max(max, cur); }
+    else cur = 1;
+  }
+  return max;
+}
+
+function buildHeatmap(data) {
+  const grid = document.getElementById('heatmap-grid');
+  const months = document.getElementById('heatmap-months');
+  if (!grid) return;
+
+  // Count submissions per date
+  const counts = {};
+  data.forEach(s => {
+    const d = new Date(s.submitted_at).toISOString().split('T')[0];
+    counts[d] = (counts[d] || 0) + 1;
+  });
+
+  const today = new Date();
+  const weeksBack = 52;
+  const totalDays = weeksBack * 7;
+  const start = new Date(today);
+  start.setDate(today.getDate() - totalDays + 1);
+  // align to Sunday
+  start.setDate(start.getDate() - start.getDay());
+
+  let gridHTML = '';
+  let monthsHTML = '';
+  let lastMonth = -1;
+
+  for (let w = 0; w < weeksBack; w++) {
+    gridHTML += '<div class="heatmap-col">';
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(start);
+      day.setDate(start.getDate() + w * 7 + d);
+      const key = day.toISOString().split('T')[0];
+      const cnt = counts[key] || 0;
+      const heat = cnt === 0 ? 0 : cnt <= 1 ? 1 : cnt <= 3 ? 2 : cnt <= 5 ? 3 : 4;
+      gridHTML += `<div class="heatmap-cell heat-${heat}" title="${key}: ${cnt} submissions"></div>`;
+    }
+    gridHTML += '</div>';
+
+    // Month label
+    const weekStart = new Date(start);
+    weekStart.setDate(start.getDate() + w * 7);
+    const mo = weekStart.getMonth();
+    if (mo !== lastMonth) {
+      lastMonth = mo;
+      const label = weekStart.toLocaleDateString('en-US', { month: 'short' });
+      monthsHTML += `<div style="width:${12 * 7 + 3 * 7}px; flex-shrink:0;">${label}</div>`;
+    }
+  }
+
+  grid.innerHTML = gridHTML;
+  months.innerHTML = monthsHTML;
+}
+
+// ── Recommendations ────────────────────────────────────────
+async function loadRecommendations() {
+  try {
+    const data = await progress.getRecommendations();
+    const container = document.getElementById('recommendations');
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="color:#475569; font-size:13px;">Solve more problems to get recommendations.</p>';
+      return;
+    }
+
+    let html = '';
+    data.slice(0, 3).forEach(problem => {
+      const color = problem.difficulty === 'Easy' ? '#4ade80' : problem.difficulty === 'Medium' ? '#fbbf24' : '#f87171';
+      html += `
+        <div onclick="window.location.href='problem.html?id=${problem.id}'"
+          style="padding:14px 16px; background:#0f172a; border:1px solid #1e293b; border-radius:10px;
+          margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+          transition:border-color 0.2s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#1e293b'">
+          <span style="font-weight:600; color:#e2e8f0;">${problem.title}</span>
+          <span style="color:${color}; font-size:12px; font-weight:700;">${problem.difficulty}</span>
+        </div>`;
+    });
     container.innerHTML = html;
 
   } catch (err) {
-    document.getElementById('recent-submissions').innerHTML = '<p class="error-msg">Failed to load submissions.</p>';
+    document.getElementById('recommendations').innerHTML = '<p style="color:#ef4444;">Failed to load recommendations.</p>';
   }
 }
 
