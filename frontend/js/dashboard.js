@@ -136,22 +136,26 @@ function setArc(id, filled, total, offset) {
 }
 
 // ── Recent Submissions + Heatmap ──────────────────────────
+// ── Recent Submissions + Heatmap ──────────────────────────
+let allSubmissions = [];
+
 async function loadRecentSubmissions() {
   try {
     const data = await submissions.getMySubmissions();
+    allSubmissions = data || [];
     const container = document.getElementById('recent-submissions');
 
-    if (!data || data.length === 0) {
+    if (!allSubmissions.length) {
       container.innerHTML = '<p style="color:#475569; font-size:13px;">No submissions yet.</p>';
-      buildHeatmap([]);
+      buildHeatmap([], 'last-year');
       return;
     }
 
-    // Update heatmap with all submissions
-    buildHeatmap(data);
+    // Default: Past year
+    buildHeatmap(allSubmissions, 'last-year');
 
     // Recent 5 for the list
-    const recent = data.slice(0, 5);
+    const recent = allSubmissions.slice(0, 5);
     let html = '';
     recent.forEach(s => {
       const date = new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -165,15 +169,21 @@ async function loadRecentSubmissions() {
     });
     container.innerHTML = html;
 
-    // Stats
-    const activeDays = new Set(data.map(s => new Date(s.submitted_at).toDateString())).size;
-    document.getElementById('heatmap-total').textContent = data.length;
+    // Stats (Global)
+    const activeDays = new Set(allSubmissions.map(s => new Date(s.submitted_at).toDateString())).size;
+    document.getElementById('heatmap-total').textContent = allSubmissions.length;
     document.getElementById('active-days').textContent = activeDays;
-    document.getElementById('max-streak').textContent = calcMaxStreak(data);
+    document.getElementById('max-streak').textContent = calcMaxStreak(allSubmissions);
+
+    // Year select listener
+    const yearSelect = document.getElementById('heatmap-year-select');
+    if (yearSelect) {
+      yearSelect.onchange = (e) => buildHeatmap(allSubmissions, e.target.value);
+    }
 
   } catch (err) {
     document.getElementById('recent-submissions').innerHTML = '<p style="color:#ef4444;">Failed to load submissions.</p>';
-    buildHeatmap([]);
+    buildHeatmap([], 'last-year');
   }
 }
 
@@ -189,55 +199,67 @@ function calcMaxStreak(data) {
   return max;
 }
 
-function buildHeatmap(data) {
+function buildHeatmap(data, filterYear) {
   const grid = document.getElementById('heatmap-grid');
   const months = document.getElementById('heatmap-months');
   if (!grid) return;
 
-  // Count submissions per date
   const counts = {};
   data.forEach(s => {
     const d = new Date(s.submitted_at).toISOString().split('T')[0];
     counts[d] = (counts[d] || 0) + 1;
   });
 
-  const today = new Date();
-  const weeksBack = 52;
-  const totalDays = weeksBack * 7;
-  const start = new Date(today);
-  start.setDate(today.getDate() - totalDays + 1);
-  // align to Sunday
-  start.setDate(start.getDate() - start.getDay());
+  let startDate, weeksToShow;
+  if (filterYear === 'last-year') {
+    const today = new Date();
+    weeksToShow = 53;
+    startDate = new Date(today);
+    startDate.setDate(today.getDate() - (weeksToShow * 7) + 1);
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Start on Sunday
+  } else {
+    const yearNum = parseInt(filterYear);
+    startDate = new Date(yearNum, 0, 1); // Jan 1st
+    startDate.setDate(startDate.getDate() - startDate.getDay()); // Align to weekly start
+    weeksToShow = 53; // Calendar year usually fits in 53 weekly columns
+  }
 
   let gridHTML = '';
   let monthsHTML = '';
   let lastMonth = -1;
+  let yearSubmissions = 0;
 
-  for (let w = 0; w < weeksBack; w++) {
+  for (let w = 0; w < weeksToShow; w++) {
     gridHTML += '<div class="heatmap-col">';
     for (let d = 0; d < 7; d++) {
-      const day = new Date(start);
-      day.setDate(start.getDate() + w * 7 + d);
+      const day = new Date(startDate);
+      day.setDate(startDate.getDate() + w * 7 + d);
+      
+      // If filterYear is specific, only count days in that year
+      const isInYear = filterYear === 'last-year' || day.getFullYear() === parseInt(filterYear);
       const key = day.toISOString().split('T')[0];
-      const cnt = counts[key] || 0;
+      const cnt = isInYear ? (counts[key] || 0) : 0;
+      if (isInYear) yearSubmissions += cnt;
+
       const heat = cnt === 0 ? 0 : cnt <= 1 ? 1 : cnt <= 3 ? 2 : cnt <= 5 ? 3 : 4;
       gridHTML += `<div class="heatmap-cell heat-${heat}" title="${key}: ${cnt} submissions"></div>`;
     }
     gridHTML += '</div>';
 
-    // Month label
-    const weekStart = new Date(start);
-    weekStart.setDate(start.getDate() + w * 7);
-    const mo = weekStart.getMonth();
+    // Improved Month alignment
+    const colDate = new Date(startDate);
+    colDate.setDate(startDate.getDate() + w * 7);
+    const mo = colDate.getMonth();
     if (mo !== lastMonth) {
       lastMonth = mo;
-      const label = weekStart.toLocaleDateString('en-US', { month: 'short' });
-      monthsHTML += `<div style="width:${12 * 7 + 3 * 7}px; flex-shrink:0;">${label}</div>`;
+      const label = colDate.toLocaleDateString('en-US', { month: 'short' });
+      monthsHTML += `<div style="flex: 1; min-width: 0; font-size: 11px; color: #64748b;">${label}</div>`;
     }
   }
 
   grid.innerHTML = gridHTML;
   months.innerHTML = monthsHTML;
+  document.getElementById('heatmap-total').textContent = yearSubmissions;
 }
 
 // ── Recommendations ────────────────────────────────────────

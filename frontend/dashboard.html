@@ -92,17 +92,17 @@
     }
 
     .diff-easy {
-      background: #1c3a2b;
+      background: #e0e4e2;
       color: #4ade80;
     }
 
     .diff-medium {
-      background: #3a2c14;
+      background: #e0e4e2;
       color: #fbbf24;
     }
 
     .diff-hard {
-      background: #3a1414;
+      background: #e0e4e2;
       color: #f87171;
     }
 
@@ -369,7 +369,8 @@
     <!-- Right Content: Stats & Progress (Stacked Vertically) -->
     <div class="dashboard-main-content">
       <!-- Solved Ring & Difficulty Breakdown -->
-      <div class="card solved-card" style="display:flex; align-items:center; justify-content:space-around; padding:32px;">
+      <div class="card solved-card"
+        style="display:flex; align-items:center; justify-content:space-around; padding:32px;">
         <div class="ring-wrap" style="margin-right:0;">
           <svg width="120" height="120" viewBox="0 0 120 120">
             <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" stroke-width="10" />
@@ -412,23 +413,30 @@
           <span style="color:#6366f1; cursor:pointer; font-size:18px; margin-left:8px;">›</span>
         </div>
         <div class="badge-icon" style="margin-bottom:16px;">
-          <img src="https://assets.leetcode.com/static_assets/others/50_days_badge_2025.png" style="width:80px;"
+          <img src="images/badge-50-days.png" style="width:80px;"
             alt="badge">
         </div>
-        <div class="badge-recent-name" id="badge-name" style="font-size:18px; font-weight:700; margin-bottom:8px;">50 Days
+        <div class="badge-recent-name" id="badge-name" style="font-size:18px; font-weight:700; margin-bottom:8px;">50
+          Days
           Badge 2025</div>
         <div class="badge-recent-label">Most Recent Badge</div>
       </div>
 
       <!-- Submission heatmap -->
       <div class="heatmap-card">
-        <div class="heatmap-header">
+        <div class="heatmap-header" style="display:flex; justify-content:space-between; align-items:center;">
           <div class="heatmap-title">
-            <span id="heatmap-total">0</span> submissions in the past one year
+            <span id="heatmap-total">0</span> submissions in 
+            <select id="heatmap-year-select" style="background:transparent; border:none; font-weight:700; color:#1e293b; font-size:16px; cursor:pointer; outline:none; padding:0 4px;">
+              <option value="last-year">the past one year</option>
+              <option value="2026">2026</option>
+              <option value="2025">2025</option>
+              <option value="2024">2024</option>
+            </select>
           </div>
-          <div class="heatmap-stats">
-            <span>Total active days: <strong id="active-days">0</strong></span>
-            <span>Max streak: <strong id="max-streak">0</strong></span>
+          <div class="heatmap-stats" style="font-size:13px; color:#64748b; display:flex; gap:16px;">
+            <span>Total active days: <strong id="active-days" style="color:#1e293b;">0</strong></span>
+            <span>Max streak: <strong id="max-streak" style="color:#1e293b;">0</strong></span>
           </div>
         </div>
         <div class="heatmap-grid-wrap">
