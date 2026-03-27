@@ -12,11 +12,9 @@ function initProfile() {
   
   const photoEl = document.getElementById('user-photo');
   const nameEl = document.getElementById('display-username');
-  const handleEl = document.getElementById('display-handle');
   const rankEl = document.getElementById('user-rank-val');
   
   if (nameEl) nameEl.textContent = user.name || 'User';
-  if (handleEl) handleEl.textContent = user.username || user.name || 'User';
   
   // Mock rank if not in user object
   if (rankEl) rankEl.textContent = user.rank || '889,402';

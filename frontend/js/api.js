@@ -275,5 +275,37 @@ const wishlist = {
       });
       return await safeJson(res);
     } catch (e) { return { error: "Share failed" }; }
+  },
+  deleteCollection: async (id) => {
+    try {
+      const res = await fetch(`${API_URL}/wishlist/collections/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Delete failed" }; }
+  },
+  getNotifications: async () => {
+    try {
+      const res = await fetch(`${API_URL}/wishlist/notifications`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
+  },
+  respondToShare: async (id, action) => {
+    try {
+      const res = await fetch(`${API_URL}/wishlist/notifications/${id}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ action })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Response failed" }; }
   }
 };

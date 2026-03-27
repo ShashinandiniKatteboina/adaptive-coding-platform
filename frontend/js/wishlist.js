@@ -4,7 +4,6 @@ async function loadCollections() {
   const cardsContainer = document.getElementById('collections-cards-container');
   const tableBody = document.getElementById('collections-table-body');
 
-  // If not logged in, show guest message
   if (!isLoggedIn()) {
     cardsContainer.innerHTML = `
       <div style="text-align:center; padding:48px 24px;">
@@ -17,20 +16,19 @@ async function loadCollections() {
     return;
   }
 
+  // Load Notifications first
+  loadNotifications();
+
   try {
     let data = await wishlist.getCollections();
     const currentUser = getUser() || { id: null };
 
-    // Ensure data is an array
-    if (!Array.isArray(data)) {
-      data = [];
-    }
+    if (!Array.isArray(data)) data = [];
 
-    // Separate: Own vs Shared
     const myCollections = data.filter(c => c.user_id === currentUser.id);
     const otherCollections = data.filter(c => c.user_id !== currentUser.id);
 
-    // --- RENDER CARDS (My Collections) ---
+    // Render Cards
     if (myCollections.length === 0) {
       cardsContainer.innerHTML = '<p class="empty-state">No personal collections yet. Click "+ Create Collection" to start.</p>';
     } else {
@@ -42,7 +40,14 @@ async function loadCollections() {
         const btnClass = i % 2 === 0 ? 'btn-green-solid' : 'btn-purple-solid';
 
         cardsHTML += `
-          <div class="collection-card ${accentClass}">
+          <div class="collection-card ${accentClass}" id="coll-${c.id}">
+            <div class="dots-menu" onclick="toggleDotsMenu(event, '${c.id}')">
+              <span class="dots-icon">⋮</span>
+              <div class="dropdown-menu" id="dropdown-${c.id}">
+                <div class="dropdown-item" onclick="openShareModal('${c.id}', '${c.name}')">Share</div>
+                <div class="dropdown-item delete" onclick="handleDeleteCollection('${c.id}')">Delete</div>
+              </div>
+            </div>
             <div class="collection-info-group">
               <span class="status-badge ${statusClass}">${statusText}</span>
               <div class="collection-title">${c.name}</div>
@@ -50,7 +55,6 @@ async function loadCollections() {
             </div>
             <div class="collection-actions">
               <button class="collection-action-btn ${btnClass}" onclick="viewCollection('${c.id}')">View Collection</button>
-              <button class="btn btn-outline btn-sm" style="margin-left:8px;" onclick="openShareModal('${c.id}', '${c.name}')">Share</button>
             </div>
           </div>
         `;
@@ -58,7 +62,7 @@ async function loadCollections() {
       cardsContainer.innerHTML = cardsHTML;
     }
 
-    // --- RENDER TABLE (Shared Collections) ---
+    // Render Table
     if (otherCollections.length === 0) {
       tableBody.innerHTML = '<tr><td colspan="4" class="empty-state">No shared collections available yet.</td></tr>';
     } else {
@@ -77,10 +81,71 @@ async function loadCollections() {
       });
       tableBody.innerHTML = tableHTML;
     }
-
   } catch (err) {
-    if (cardsContainer) cardsContainer.innerHTML = '<p class="error-msg">Failed to load collections. Make sure backend is running.</p>';
+    if (cardsContainer) cardsContainer.innerHTML = '<p class="error-msg">Failed to load collections.</p>';
   }
+}
+
+async function loadNotifications() {
+  const container = document.getElementById('notifications-container');
+  const list = document.getElementById('notifications-list');
+  if (!container || !list) return;
+
+  try {
+    const data = await wishlist.getNotifications();
+    if (data && data.length > 0) {
+      container.style.display = 'block';
+      list.innerHTML = data.map(n => `
+        <div class="notification-card">
+          <div class="notification-info">
+            <b>${n.sender_name}</b> shared <b>"${n.collection_name}"</b> with you
+          </div>
+          <div style="display:flex; gap:12px;">
+            <button class="btn btn-sm" style="background:#dcfce7; color:#15803d; border:none;" onclick="handleRespondToShare('${n.share_id}', 'accept')">Accept</button>
+            <button class="btn btn-sm" style="background:#f1f5f9; color:#475569; border:none;" onclick="handleRespondToShare('${n.share_id}', 'reject')">Reject</button>
+          </div>
+        </div>
+      `).join('');
+    } else {
+      container.style.display = 'none';
+    }
+  } catch (err) {
+    console.error('Failed to load notifications');
+  }
+}
+
+async function handleRespondToShare(shareId, action) {
+  try {
+    const res = await wishlist.respondToShare(shareId, action);
+    if (res.message) {
+      loadCollections(); // Refresh
+    }
+  } catch (err) {
+    alert('Failed to respond to invitation');
+  }
+}
+
+async function handleDeleteCollection(id) {
+  if (!confirm('Are you sure you want to delete this collection?')) return;
+  try {
+    const res = await wishlist.deleteCollection(id);
+    if (res.message) {
+      loadCollections();
+    } else {
+      alert(res.error || 'Failed to delete');
+    }
+  } catch (err) {
+    alert('Something went wrong');
+  }
+}
+
+function toggleDotsMenu(event, id) {
+  event.stopPropagation();
+  // Close all other menus first
+  document.querySelectorAll('.dropdown-menu').forEach(m => {
+    if (m.id !== `dropdown-${id}`) m.classList.remove('show');
+  });
+  document.getElementById(`dropdown-${id}`).classList.toggle('show');
 }
 
 function openNewCollectionModal() {
@@ -110,19 +175,16 @@ async function handleCreateCollection() {
 
   try {
     const res = await wishlist.createCollection(name, isPublic);
-    // Check for ID in various possible response structures
     const collectionId = res.id || (res.collection && res.collection.id);
     
     if (collectionId) {
       closeModal('collection-modal');
       loadCollections();
-      if (nameEl) nameEl.value = ''; // Reset input
+      if (nameEl) nameEl.value = '';
     } else {
-      console.error('Create collection failed:', res);
       alert(res.error || res.message || 'Failed to create collection');
     }
   } catch (err) {
-    console.error('Create collection error:', err);
     alert('Failed to create collection');
   }
 }
@@ -138,7 +200,7 @@ async function handleShareCollection() {
       alert(res.message);
       closeModal('share-modal');
     } else {
-      alert(res.error || 'Failed to share');
+      alert(res.error || 'User not found');
     }
   } catch (err) {
     alert('Something went wrong');
@@ -152,6 +214,10 @@ function viewCollection(id) {
 window.onclick = (event) => {
   if (event.target.classList.contains('modal')) {
     event.target.style.display = 'none';
+  }
+  // Close dropdowns if clicking outside
+  if (!event.target.closest('.dots-menu')) {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
   }
 };
 
