@@ -96,135 +96,184 @@ function logout() {
 // init navbar on load
 document.addEventListener('DOMContentLoaded', renderNavbar);
 
+async function safeJson(res) {
+  const contentType = res.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return await res.json();
+  }
+  return res.ok ? { success: true } : { error: `Server error: ${res.status}` };
+}
+
 // AUTH API calls
 const auth = {
   register: async (name, email, password) => {
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Network error" }; }
   },
 
   login: async (email, password) => {
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Network error" }; }
   }
 };
 
 // PROBLEMS API calls
 const problems = {
   getAll: async (topic = '', difficulty = '') => {
-    let url = `${API_URL}/problems?`;
-    if (topic) url += `topic=${topic}&`;
-    if (difficulty) url += `difficulty=${difficulty}`;
-    const res = await fetch(url);
-    return res.json();
+    try {
+      let url = `${API_URL}/problems?`;
+      if (topic) url += `topic=${topic}&`;
+      if (difficulty) url += `difficulty=${difficulty}`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   },
 
   getById: async (id) => {
-    const res = await fetch(`${API_URL}/problems/${id}`);
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/problems/${id}`);
+      if (!res.ok) return null;
+      return await safeJson(res);
+    } catch (e) { return null; }
   }
 };
 
 // SUBMISSIONS API calls
 const submissions = {
    run: async (language, code, input) => {
-    const res = await fetch(`${API_URL}/submissions/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ language, code, input })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/submissions/run`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ language, code, input })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Run failed" }; }
    },
   submit: async (problem_id, language, code) => {
-    const res = await fetch(`${API_URL}/submissions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ problem_id, language, code })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/submissions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ problem_id, language, code })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Submit failed" }; }
   },
 
   getMySubmissions: async () => {
-    const res = await fetch(`${API_URL}/submissions`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/submissions`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   }
 };
 
 // PROGRESS API calls
 const progress = {
   getProgress: async () => {
-    const res = await fetch(`${API_URL}/progress`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/progress`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   },
 
   getRecommendations: async () => {
-    const res = await fetch(`${API_URL}/progress/recommendations`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/progress/recommendations`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   }
 };
 
 // WISHLIST API calls
 const wishlist = {
   getCollections: async () => {
-    const res = await fetch(`${API_URL}/wishlist/collections`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/wishlist/collections`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   },
   getCollectionItems: async (collection_id) => {
-    const res = await fetch(`${API_URL}/wishlist/collections/${collection_id}/items`, {
-      headers: { 'Authorization': `Bearer ${getToken()}` }
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/wishlist/collections/${collection_id}/items`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   },
   createCollection: async (name, is_public = false) => {
-    const res = await fetch(`${API_URL}/wishlist/collections`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ name, is_public })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/wishlist/collections`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ name, is_public })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Create failed" }; }
   },
   addItem: async (collection_id, problem_id) => {
-    const res = await fetch(`${API_URL}/wishlist/add`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ collection_id, problem_id })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/wishlist/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ collection_id, problem_id })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Add failed" }; }
   },
   share: async (collection_id, username) => {
-    const res = await fetch(`${API_URL}/wishlist/share`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getToken()}`
-      },
-      body: JSON.stringify({ collection_id, username })
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_URL}/wishlist/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`
+        },
+        body: JSON.stringify({ collection_id, username })
+      });
+      return await safeJson(res);
+    } catch (e) { return { error: "Share failed" }; }
   }
 };

@@ -18,13 +18,12 @@ async function loadCollections() {
   }
 
   try {
-    const data = await wishlist.getCollections();
+    let data = await wishlist.getCollections();
     const currentUser = getUser() || { id: null };
 
-    // Ensure data is an array (handle API error objects gracefully)
+    // Ensure data is an array
     if (!Array.isArray(data)) {
-      cardsContainer.innerHTML = '<p class="error-msg">Failed to load collections. Please try again.</p>';
-      return;
+      data = [];
     }
 
     // Separate: Own vs Shared

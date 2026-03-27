@@ -76,9 +76,15 @@
         
         <!-- FIXED BOTTOM CONSOLE -->
         <div class="fixed-console">
-          <div class="console-tabs">
-            <div class="console-tab active" onclick="switchConsoleTab('output')">Console</div>
-            <div class="console-tab" onclick="switchConsoleTab('testcases')">Test Cases</div>
+          <div class="console-tabs" style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex;">
+              <div class="console-tab active" onclick="switchConsoleTab('output')">Console</div>
+              <div class="console-tab" onclick="switchConsoleTab('testcases')">Test Cases</div>
+            </div>
+            <div class="console-actions" style="padding-right:12px; display:flex; gap:8px;">
+              <button class="btn btn-outline btn-xs" onclick="runCode()">Run</button>
+              <button class="btn btn-primary btn-xs" onclick="submitCode()">Submit</button>
+            </div>
           </div>
           
           <div class="console-body">
@@ -88,11 +94,6 @@
             <div id="console-testcases" class="console-pane">
               <div id="testcases-content" class="console-text">Example test cases will be shown here.</div>
             </div>
-          </div>
-
-          <div class="console-footer">
-            <button class="btn btn-outline" onclick="runCode()">Run</button>
-            <button class="btn btn-primary" onclick="submitCode()">Submit</button>
           </div>
         </div>
       </div>

@@ -189,5 +189,15 @@ async function createNewCollectionAndAdd(problemId) {
   }
 }
 
+// TOPIC SEARCH LOGIC
+function filterTopicsList() {
+  const term = document.getElementById('topic-search-input').value.toLowerCase();
+  const items = document.querySelectorAll('.topic-item');
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    item.style.display = text.includes(term) ? 'block' : 'none';
+  });
+}
+
 // load problems when page opens
 loadProblems();

@@ -76,6 +76,10 @@ async function loadProblem() {
 
   try {
     const problem = await problems.getById(id);
+    if (!problem) {
+      document.getElementById('problem-loading').textContent = 'Problem not found.';
+      return;
+    }
 
     document.title = `Random — ${problem.title}`;
     document.getElementById('problem-title').textContent = problem.title;
@@ -87,7 +91,7 @@ async function loadProblem() {
 
     document.getElementById('problem-topic').textContent = problem.topic;
 
-    currentExamples = problem.examples || [];
+    currentExamples = Array.isArray(problem.examples) ? problem.examples : [];
     currentProblemLabels = problem.input_labels ? problem.input_labels.split(',').map(l => l.trim()) : [];
 
     const examplesDiv = document.getElementById('problem-examples');

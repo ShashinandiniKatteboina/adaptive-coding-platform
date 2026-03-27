@@ -2,7 +2,46 @@
 
 async function loadDashboard() {
   requireAuth();
+  initProfile();
   await Promise.all([loadProgress(), loadRecentSubmissions(), loadRecommendations()]);
+}
+
+function initProfile() {
+  const user = getUser();
+  if (!user) return;
+  
+  const photoEl = document.getElementById('user-photo');
+  const nameEl = document.getElementById('display-username');
+  
+  if (nameEl) nameEl.textContent = user.name || 'User';
+  if (photoEl && user.profile_url) {
+    photoEl.src = user.profile_url;
+  } else if (photoEl) {
+    photoEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=6366f1&color=fff`;
+  }
+}
+
+function editPhoto() {
+  const newUrl = prompt('Enter image URL for your profile photo:');
+  if (newUrl) {
+    const user = getUser();
+    user.profile_url = newUrl;
+    saveUser(user);
+    initProfile();
+    // Also update navbar if needed (renderNavbar is global)
+    if (typeof renderNavbar === 'function') renderNavbar();
+  }
+}
+
+function editProfile() {
+  const newName = prompt('Enter new display name:', getUser().name);
+  if (newName) {
+    const user = getUser();
+    user.name = newName;
+    saveUser(user);
+    initProfile();
+    if (typeof renderNavbar === 'function') renderNavbar();
+  }
 }
 
 // ── Progress / ring / heatmap ──────────────────────────────
@@ -28,10 +67,10 @@ async function loadProgress() {
         topicHTML += `
           <div style="margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="text-transform:capitalize; font-size:14px; font-weight:600; color:#e2e8f0;">${p.topic}</span>
-              <span style="color:#475569; font-size:12px;">${p.easy_solved||0}E · ${p.medium_solved||0}M · ${p.hard_solved||0}H</span>
+              <span style="text-transform:capitalize; font-size:14px; font-weight:600; color:#1e293b;">${p.topic}</span>
+              <span style="color:#64748b; font-size:12px;">${p.easy_solved||0}E · ${p.medium_solved||0}M · ${p.hard_solved||0}H</span>
             </div>
-            <div style="background:#0f172a; height:8px; border-radius:8px;">
+            <div style="background:#f1f5f9; height:8px; border-radius:8px;">
               <div style="width:${percent}%; background:#6366f1; height:100%; border-radius:8px;"></div>
             </div>
           </div>`;
@@ -209,13 +248,13 @@ async function loadRecommendations() {
 
     let html = '';
     data.slice(0, 3).forEach(problem => {
-      const color = problem.difficulty === 'Easy' ? '#4ade80' : problem.difficulty === 'Medium' ? '#fbbf24' : '#f87171';
+      const color = problem.difficulty === 'Easy' ? '#16a34a' : problem.difficulty === 'Medium' ? '#d97706' : '#dc2626';
       html += `
         <div onclick="window.location.href='problem.html?id=${problem.id}'"
-          style="padding:14px 16px; background:#0f172a; border:1px solid #1e293b; border-radius:10px;
+          style="padding:14px 16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px;
           margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
-          transition:border-color 0.2s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#1e293b'">
-          <span style="font-weight:600; color:#e2e8f0;">${problem.title}</span>
+          transition:border-color 0.2s;" onmouseover="this.style.borderColor='#6366f1'" onmouseout="this.style.borderColor='#e2e8f0'">
+          <span style="font-weight:600; color:#1e293b;">${problem.title}</span>
           <span style="color:${color}; font-size:12px; font-weight:700;">${problem.difficulty}</span>
         </div>`;
     });
