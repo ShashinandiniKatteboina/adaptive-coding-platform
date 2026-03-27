@@ -202,16 +202,17 @@ nav .nav-links a:hover {
 .dashboard-main-content {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 24px;
 }
 
-/* Ensure heatmap and other cards in main content are full width */
+/* Ensure heatmap and other cards in main content are 42% width */
 .dashboard-main-content .card,
 .dashboard-main-content .heatmap-card,
 .dashboard-main-content .dark-card {
-  width: 100%;
-  margin-bottom: 0; /* Handled by gap */
+  width: 42%;
+  margin-bottom: 0;
 }
 
 @media (max-width: 900px) {
