@@ -185,6 +185,45 @@ nav .nav-links a:hover {
   border-bottom-color: #6366f1;
 }
 
+/* DASHBOARD SPECIFIC (Simplification) */
+.dashboard-container-split {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  max-width: 1100px !important;
+  margin: 0 auto;
+}
+
+.dashboard-sidebar {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.dashboard-main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Ensure heatmap and other cards in main content are full width */
+.dashboard-main-content .card,
+.dashboard-main-content .heatmap-card,
+.dashboard-main-content .dark-card {
+  width: 100%;
+  margin-bottom: 0; /* Handled by gap */
+}
+
+@media (max-width: 900px) {
+  .dashboard-container-split {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dashboard-sidebar {
+    width: 100%;
+  }
+}
+
 /* CONTAINER */
 .container {
   max-width: 1100px;

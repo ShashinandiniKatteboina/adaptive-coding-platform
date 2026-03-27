@@ -341,124 +341,127 @@
     <div id="nav-actions" class="nav-links"></div>
   </nav>
 
-  <div class="container container-wide"
-    style="display:flex; flex-direction:column; gap:24px; padding-top:28px; max-width: 900px;">
-
-    <!-- Profile Info Card -->
-    <div class="card profile-card" style="text-align:center; padding:32px;">
-      <div class="profile-photo-container">
-        <img id="user-photo" src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User"
-          class="profile-photo-large">
-        <div class="photo-edit-overlay" onclick="editPhoto()">
-          <span>Change Photo</span>
+  <div class="container container-wide dashboard-container-split">
+    <!-- Left Sidebar: Profile Identity -->
+    <div class="dashboard-sidebar">
+      <div class="card profile-card" style="text-align:center; padding:32px;">
+        <div class="profile-photo-container">
+          <img id="user-photo" src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User"
+            class="profile-photo-large">
+          <div class="photo-edit-overlay" onclick="editPhoto()">
+            <span>Change Photo</span>
+          </div>
         </div>
-      </div>
-      <div class="profile-meta-top">
-        <h2 id="display-username" class="profile-username-main">vigneshwar92</h2>
-        <div class="profile-rank">Rank <span id="user-rank-val">889,402</span></div>
-      </div>
-      <div class="profile-followers" style="justify-content:center;">
-        <span><strong>0</strong> Following</span>
-        <span style="margin: 0 8px; color: #e2e8f0;">|</span>
-        <span><strong>0</strong> Followers</span>
-      </div>
-      <button class="btn btn-outline btn-sm btn-edit-profile" style="width: auto; margin-top: 16px;"
-        onclick="editProfile()">Edit Profile</button>
-    </div>
-
-    <!-- Solved Ring & Difficulty Breakdown -->
-    <div class="card solved-card" style="display:flex; align-items:center; justify-content:space-around; padding:32px;">
-      <div class="ring-wrap" style="margin-right:0;">
-        <svg width="120" height="120" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" stroke-width="10" />
-          <circle id="ring-easy" cx="60" cy="60" r="50" fill="none" stroke="#4ade80" stroke-width="10"
-            stroke-linecap="round" stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;" />
-          <circle id="ring-medium" cx="60" cy="60" r="50" fill="none" stroke="#fbbf24" stroke-width="10"
-            stroke-linecap="round" stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;" />
-          <circle id="ring-hard" cx="60" cy="60" r="50" fill="none" stroke="#f87171" stroke-width="10"
-            stroke-linecap="round" stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;" />
-        </svg>
-        <div class="ring-center">
-          <div class="ring-total"><span id="ring-total-num">0</span><span style="font-size:13px;color:#475569;">/<span
-                id="ring-total-max">0</span></span></div>
-          <div class="ring-label">✓ Solved</div>
+        <div class="profile-meta-top">
+          <h2 id="display-username" class="profile-username-main">vigneshwar92</h2>
+          <div class="profile-rank">Rank <span id="user-rank-val">889,402</span></div>
         </div>
-      </div>
-      <div class="diff-breakdown" style="flex:1; max-width:300px; margin-left:40px;">
-        <div class="diff-row">
-          <span class="diff-btn diff-easy">Easy</span>
-          <span class="diff-count" id="d-easy">0</span>
-          <span class="diff-slash">/<span id="d-easy-total">-</span></span>
+        <div class="profile-followers" style="justify-content:center;">
+          <span><strong>0</strong> Following</span>
+          <span style="margin: 0 8px; color: #e2e8f0;">|</span>
+          <span><strong>0</strong> Followers</span>
         </div>
-        <div class="diff-row">
-          <span class="diff-btn diff-medium">Med.</span>
-          <span class="diff-count" id="d-medium">0</span>
-          <span class="diff-slash">/<span id="d-medium-total">-</span></span>
-        </div>
-        <div class="diff-row">
-          <span class="diff-btn diff-hard">Hard</span>
-          <span class="diff-count" id="d-hard">0</span>
-          <span class="diff-slash">/<span id="d-hard-total">-</span></span>
-        </div>
+        <button class="btn btn-outline btn-sm btn-edit-profile" style="width: auto; margin-top: 16px;"
+          onclick="editProfile()">Edit Profile</button>
       </div>
     </div>
 
-    <!-- Badges -->
-    <div class="card badges-card" style="text-align:center; padding:32px;">
-      <div class="badges-title" style="justify-content:center; margin-bottom:20px;">
-        Badges
-        <span style="color:#6366f1; cursor:pointer; font-size:18px; margin-left:8px;">›</span>
-      </div>
-      <div class="badge-icon" style="margin-bottom:16px;">
-        <img src="https://assets.leetcode.com/static_assets/others/50_days_badge_2025.png" style="width:80px;"
-          alt="badge">
-      </div>
-      <div class="badge-recent-name" id="badge-name" style="font-size:18px; font-weight:700; margin-bottom:8px;">50 Days
-        Badge 2025</div>
-      <div class="badge-recent-label">Most Recent Badge</div>
-    </div>
-
-    <!-- Submission heatmap -->
-    <div class="heatmap-card">
-      <div class="heatmap-header">
-        <div class="heatmap-title">
-          <span id="heatmap-total">0</span> submissions in the past one year
+    <!-- Right Content: Stats & Progress (Stacked Vertically) -->
+    <div class="dashboard-main-content">
+      <!-- Solved Ring & Difficulty Breakdown -->
+      <div class="card solved-card" style="display:flex; align-items:center; justify-content:space-around; padding:32px;">
+        <div class="ring-wrap" style="margin-right:0;">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" stroke-width="10" />
+            <circle id="ring-easy" cx="60" cy="60" r="50" fill="none" stroke="#4ade80" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;" />
+            <circle id="ring-medium" cx="60" cy="60" r="50" fill="none" stroke="#fbbf24" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;" />
+            <circle id="ring-hard" cx="60" cy="60" r="50" fill="none" stroke="#f87171" stroke-width="10"
+              stroke-linecap="round" stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;" />
+          </svg>
+          <div class="ring-center">
+            <div class="ring-total"><span id="ring-total-num">0</span><span style="font-size:13px;color:#475569;">/<span
+                  id="ring-total-max">0</span></span></div>
+            <div class="ring-label">✓ Solved</div>
+          </div>
         </div>
-        <div class="heatmap-stats">
-          <span>Total active days: <strong id="active-days">0</strong></span>
-          <span>Max streak: <strong id="max-streak">0</strong></span>
+        <div class="diff-breakdown" style="flex:1; max-width:300px; margin-left:40px;">
+          <div class="diff-row">
+            <span class="diff-btn diff-easy">Easy</span>
+            <span class="diff-count" id="d-easy">0</span>
+            <span class="diff-slash">/<span id="d-easy-total">-</span></span>
+          </div>
+          <div class="diff-row">
+            <span class="diff-btn diff-medium">Med.</span>
+            <span class="diff-count" id="d-medium">0</span>
+            <span class="diff-slash">/<span id="d-medium-total">-</span></span>
+          </div>
+          <div class="diff-row">
+            <span class="diff-btn diff-hard">Hard</span>
+            <span class="diff-count" id="d-hard">0</span>
+            <span class="diff-slash">/<span id="d-hard-total">-</span></span>
+          </div>
         </div>
       </div>
-      <div class="heatmap-grid-wrap">
-        <div class="heatmap-grid" id="heatmap-grid"></div>
-        <div class="heatmap-months" id="heatmap-months"></div>
-      </div>
-    </div>
 
-    <!-- Topic progress + Recent submissions -->
-    <div class="stats-row">
+      <!-- Badges -->
+      <div class="card badges-card" style="text-align:center; padding:32px;">
+        <div class="badges-title" style="justify-content:center; margin-bottom:20px;">
+          Badges
+          <span style="color:#6366f1; cursor:pointer; font-size:18px; margin-left:8px;">›</span>
+        </div>
+        <div class="badge-icon" style="margin-bottom:16px;">
+          <img src="https://assets.leetcode.com/static_assets/others/50_days_badge_2025.png" style="width:80px;"
+            alt="badge">
+        </div>
+        <div class="badge-recent-name" id="badge-name" style="font-size:18px; font-weight:700; margin-bottom:8px;">50 Days
+          Badge 2025</div>
+        <div class="badge-recent-label">Most Recent Badge</div>
+      </div>
+
+      <!-- Submission heatmap -->
+      <div class="heatmap-card">
+        <div class="heatmap-header">
+          <div class="heatmap-title">
+            <span id="heatmap-total">0</span> submissions in the past one year
+          </div>
+          <div class="heatmap-stats">
+            <span>Total active days: <strong id="active-days">0</strong></span>
+            <span>Max streak: <strong id="max-streak">0</strong></span>
+          </div>
+        </div>
+        <div class="heatmap-grid-wrap">
+          <div class="heatmap-grid" id="heatmap-grid"></div>
+          <div class="heatmap-months" id="heatmap-months"></div>
+        </div>
+      </div>
+
+      <!-- Topic progress (Now stacked vertically) -->
       <div class="dark-card">
-        <h3>Progress by Topic</h3>
+        <h3 style="margin-bottom:20px;">Progress by Topic</h3>
         <div id="topic-progress">
           <div class="loading" style="color:#475569;">Loading...</div>
         </div>
       </div>
+
+      <!-- Recent submissions (Now stacked vertically) -->
       <div class="dark-card">
-        <h3>Recent Submissions</h3>
+        <h3 style="margin-bottom:20px;">Recent Submissions</h3>
         <div id="recent-submissions">
           <div class="loading" style="color:#475569;">Loading...</div>
         </div>
       </div>
-    </div>
 
-    <!-- Recommendations -->
-    <div class="dark-card" style="margin-bottom:32px;">
-      <h3>Recommended for You</h3>
-      <div id="recommendations">
-        <div class="loading" style="color:#475569;">Loading...</div>
+      <!-- Recommendations (Now inside main content) -->
+      <div class="dark-card" style="margin-bottom:32px;">
+        <h3>Recommended for You</h3>
+        <div id="recommendations">
+          <div class="loading" style="color:#475569;">Loading...</div>
+        </div>
       </div>
-    </div>
 
+    </div>
   </div>
 
   <footer class="main-footer">
