@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,37 +13,43 @@
       gap: 24px;
       margin-top: 32px;
     }
+
     .course-card {
       background: var(--surface, #ffffff);
       border: 1px solid var(--border, #e2e8f0);
       border-radius: 16px;
       padding: 28px;
-      box-shadow: 0 4px 6px -1px var(--card-shadow, rgba(0,0,0,0.05));
+      box-shadow: 0 4px 6px -1px var(--card-shadow, rgba(0, 0, 0, 0.05));
       transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s;
       cursor: pointer;
     }
+
     .course-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 10px 20px -4px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 20px -4px rgba(0, 0, 0, 0.1);
     }
+
     .course-title {
       font-size: 18px;
       font-weight: 700;
       color: var(--text, #1e293b);
       margin-bottom: 8px;
     }
+
     .course-desc {
       font-size: 14px;
       color: var(--text-muted, #64748b);
       line-height: 1.6;
       margin-bottom: 16px;
     }
+
     .course-meta {
       display: flex;
       gap: 12px;
       align-items: center;
       flex-wrap: wrap;
     }
+
     .course-tag {
       padding: 3px 10px;
       border-radius: 20px;
@@ -50,18 +57,53 @@
       font-weight: 600;
       text-transform: uppercase;
     }
-    .tag-beginner { background: #dcfce7; color: #16a34a; }
-    .tag-intermediate { background: #fef3c7; color: #d97706; }
-    .tag-advanced { background: #fee2e2; color: #dc2626; }
-    .course-lessons { font-size: 12px; color: #94a3b8; }
-    .course-accent-1 { border-top: 4px solid #6366f1; }
-    .course-accent-2 { border-top: 4px solid #22c55e; }
-    .course-accent-3 { border-top: 4px solid #f59e0b; }
-    .course-accent-4 { border-top: 4px solid #ef4444; }
-    .course-accent-5 { border-top: 4px solid #8b5cf6; }
-    .course-accent-6 { border-top: 4px solid #06b6d4; }
+
+    .tag-beginner {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .tag-intermediate {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .tag-advanced {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    .course-lessons {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .course-accent-1 {
+      border-top: 4px solid #6366f1;
+    }
+
+    .course-accent-2 {
+      border-top: 4px solid #22c55e;
+    }
+
+    .course-accent-3 {
+      border-top: 4px solid #f59e0b;
+    }
+
+    .course-accent-4 {
+      border-top: 4px solid #ef4444;
+    }
+
+    .course-accent-5 {
+      border-top: 4px solid #8b5cf6;
+    }
+
+    .course-accent-6 {
+      border-top: 4px solid #06b6d4;
+    }
   </style>
 </head>
+
 <body>
 
   <nav class="main-nav">
@@ -74,14 +116,16 @@
   <div class="container">
     <div style="margin-bottom: 32px; margin-top: 16px;">
       <h1 class="page-title">Courses</h1>
-      <p style="color:#64748b; font-size:15px; margin-top:6px;">Structured learning paths to master data structures and algorithms.</p>
+      <p style="color:#64748b; font-size:15px; margin-top:6px;">Structured learning paths to master data structures and
+        algorithms.</p>
     </div>
 
     <div class="courses-grid">
 
       <div class="course-card course-accent-1" onclick="alert('Course coming soon!')">
         <div class="course-title">Arrays & Strings</div>
-        <div class="course-desc">Master the fundamentals of arrays, strings, two-pointer, and sliding window techniques.</div>
+        <div class="course-desc">Master the fundamentals of arrays, strings, two-pointer, and sliding window techniques.
+        </div>
         <div class="course-meta">
           <span class="course-tag tag-beginner">Beginner</span>
           <span class="course-lessons">12 lessons</span>
@@ -99,7 +143,8 @@
 
       <div class="course-card course-accent-3" onclick="alert('Course coming soon!')">
         <div class="course-title">Dynamic Programming</div>
-        <div class="course-desc">Break down complex problems using memoization, tabulation, and classic DP patterns.</div>
+        <div class="course-desc">Break down complex problems using memoization, tabulation, and classic DP patterns.
+        </div>
         <div class="course-meta">
           <span class="course-tag tag-advanced">Advanced</span>
           <span class="course-lessons">20 lessons</span>
@@ -108,7 +153,8 @@
 
       <div class="course-card course-accent-4" onclick="alert('Course coming soon!')">
         <div class="course-title">Linked Lists</div>
-        <div class="course-desc">Understand singly/doubly linked lists, reversals, cycle detection and merge operations.</div>
+        <div class="course-desc">Understand singly/doubly linked lists, reversals, cycle detection and merge operations.
+        </div>
         <div class="course-meta">
           <span class="course-tag tag-beginner">Beginner</span>
           <span class="course-lessons">10 lessons</span>
@@ -126,7 +172,8 @@
 
       <div class="course-card course-accent-6" onclick="alert('Course coming soon!')">
         <div class="course-title">Sorting & Searching</div>
-        <div class="course-desc">From quicksort to binary search — build intuition for sorting algorithms and search strategies.</div>
+        <div class="course-desc">From quicksort to binary search — build intuition for sorting algorithms and search
+          strategies.</div>
         <div class="course-meta">
           <span class="course-tag tag-intermediate">Intermediate</span>
           <span class="course-lessons">14 lessons</span>
@@ -139,12 +186,13 @@
   <footer class="main-footer">
     <p class="dev-title">Developed by</p>
     <div class="team-names">
-      <a href="#">Akula Vaishnavi</a>
-      <a href="#">Katteboina ShashiNandini</a>
-      <a href="#">Pokala Vigneshwar</a>
+      <a href="https://www.linkedin.com/in/akula-vaishnavi-663873281/">Akula Vaishnavi</a>
+      <a href="https://www.linkedin.com/in/shashinandini-katteboina-0802a62b0/">Katteboina ShashiNandini</a>
+      <a href="https://www.linkedin.com/in/vigneshwar-pokala-14b24931b/">Pokala Vigneshwar</a>
     </div>
   </footer>
 
   <script src="js/api.js"></script>
 </body>
+
 </html>

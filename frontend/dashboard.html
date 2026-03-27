@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,7 +42,8 @@
 
     .ring-center {
       position: absolute;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
       line-height: 1.2;
@@ -88,9 +90,21 @@
       min-width: 68px;
       text-align: center;
     }
-    .diff-easy   { background: #1c3a2b; color: #4ade80; }
-    .diff-medium { background: #3a2c14; color: #fbbf24; }
-    .diff-hard   { background: #3a1414; color: #f87171; }
+
+    .diff-easy {
+      background: #1c3a2b;
+      color: #4ade80;
+    }
+
+    .diff-medium {
+      background: #3a2c14;
+      color: #fbbf24;
+    }
+
+    .diff-hard {
+      background: #3a1414;
+      color: #f87171;
+    }
 
     .diff-count {
       font-size: 20px;
@@ -114,7 +128,8 @@
     }
 
     .attempting-dot {
-      width: 8px; height: 8px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
       background: #38bdf8;
       display: inline-block;
@@ -234,11 +249,26 @@
       border-radius: 2px;
       background: #f1f5f9;
     }
-    .heat-0 { background: #f1f5f9; }
-    .heat-1 { background: #dcfce7; }
-    .heat-2 { background: #bbf7d0; }
-    .heat-3 { background: #86efac; }
-    .heat-4 { background: #4ade80; }
+
+    .heat-0 {
+      background: #f1f5f9;
+    }
+
+    .heat-1 {
+      background: #dcfce7;
+    }
+
+    .heat-2 {
+      background: #bbf7d0;
+    }
+
+    .heat-3 {
+      background: #86efac;
+    }
+
+    .heat-4 {
+      background: #4ade80;
+    }
 
     .heatmap-months {
       display: flex;
@@ -258,7 +288,9 @@
     }
 
     @media (max-width: 700px) {
-      .stats-row { grid-template-columns: 1fr; }
+      .stats-row {
+        grid-template-columns: 1fr;
+      }
     }
 
     .dark-card {
@@ -286,11 +318,22 @@
       font-size: 14px;
     }
 
-    .sub-row:last-child { border-bottom: none; }
-    .sub-title { font-weight: 600; color: #1e293b; }
-    .sub-date { color: #475569; font-size: 12px; }
+    .sub-row:last-child {
+      border-bottom: none;
+    }
+
+    .sub-title {
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .sub-date {
+      color: #475569;
+      font-size: 12px;
+    }
   </style>
 </head>
+
 <body>
 
   <nav class="main-nav">
@@ -309,90 +352,165 @@
             <span>Change Photo</span>
           </div>
         </div>
-        <h2 id="display-username" class="profile-username-text">Username</h2>
-        <button class="btn btn-outline btn-block btn-sm" onclick="editProfile()">Edit Profile</button>
+        <div class="profile-meta-top">
+          <h2 id="display-username" class="profile-username-main">vigneshwar92</h2>
+          <p id="display-handle" class="profile-handle">vigneshwar92</p>
+          <div class="profile-rank">Rank <span id="user-rank-val">889,402</span></div>
+        </div>
+        
+        <div class="profile-followers">
+          <span><strong>0</strong> Following</span>
+          <span style="margin: 0 8px; color: #e2e8f0;">|</span>
+          <span><strong>0</strong> Followers</span>
+        </div>
+
+        <button class="btn btn-outline btn-block btn-sm btn-edit-profile" onclick="editProfile()">Edit Profile</button>
       </div>
 
-      <!-- Quick Stats -->
-      <div class="sidebar-stats-box">
-        <div class="s-stat">
-          <span class="s-label">Rank</span>
-          <span class="s-value">#1,234,567</span>
+      <!-- Community Stats -->
+      <div class="sidebar-section">
+        <h3 class="section-label">Community Stats</h3>
+        <div class="stat-item">
+          <span class="stat-icon">👁️</span>
+          <span class="stat-text">Views</span>
+          <span class="stat-val">0</span>
         </div>
-        <hr>
-        <div class="s-stat">
-          <span class="s-label">Points</span>
-          <span class="s-value">456</span>
+        <div class="stat-item">
+          <span class="stat-icon">✔️</span>
+          <span class="stat-text">Solution</span>
+          <span class="stat-val">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">💬</span>
+          <span class="stat-text">Discuss</span>
+          <span class="stat-val">0</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-icon">⭐</span>
+          <span class="stat-text">Reputation</span>
+          <span class="stat-val">0</span>
+        </div>
+      </div>
+
+      <!-- Languages -->
+      <div class="sidebar-section">
+        <h3 class="section-label">Languages</h3>
+        <div class="lang-row">
+          <span class="lang-pill">Java</span>
+          <span class="lang-count"><strong>172</strong> problems solved</span>
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div class="sidebar-section">
+        <h3 class="section-label">Skills</h3>
+        <div class="skill-group">
+          <div class="skill-category">Advanced</div>
+          <div class="skill-tags">
+            <span class="skill-tag">Dynamic Programming <small>x11</small></span>
+            <span class="skill-tag">Backtracking <small>x5</small></span>
+            <span class="skill-tag">Divide and Conquer <small>x3</small></span>
+          </div>
+        </div>
+        <div class="skill-group">
+          <div class="skill-category">Intermediate</div>
+          <div class="skill-tags">
+            <span class="skill-tag">Math <small>x46</small></span>
+            <span class="skill-tag">Hash Table <small>x34</small></span>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="dashboard-main-content" style="flex:1;">
-
-      <!-- Solved ring + difficulty -->
-      <div class="solved-card">
-        <div class="ring-wrap">
-          <svg width="120" height="120" viewBox="0 0 120 120">
-            <!-- track -->
-            <circle cx="60" cy="60" r="50" fill="none" stroke="#1e293b" stroke-width="10"/>
-            <!-- easy arc -->
-            <circle id="ring-easy" cx="60" cy="60" r="50" fill="none"
-              stroke="#4ade80" stroke-width="10" stroke-linecap="round"
-              stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;"/>
-            <!-- medium arc -->
-            <circle id="ring-medium" cx="60" cy="60" r="50" fill="none"
-              stroke="#fbbf24" stroke-width="10" stroke-linecap="round"
-              stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;"/>
-            <!-- hard arc -->
-            <circle id="ring-hard" cx="60" cy="60" r="50" fill="none"
-              stroke="#f87171" stroke-width="10" stroke-linecap="round"
-              stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;"/>
-          </svg>
-          <div class="ring-center">
-            <div class="ring-total"><span id="ring-total-num">0</span><span style="font-size:13px;color:#475569;">/<span id="ring-total-max">0</span></span></div>
-            <div class="ring-label">✓ Solved</div>
+      
+      <!-- Top Grid: Rating & Distribution -->
+      <div class="dashboard-top-grid">
+        <div class="card dark-card rating-card" style="margin-bottom:0; flex:1;">
+          <div class="card-header-small">
+            <span>Contest Rating</span>
+          </div>
+          <div class="rating-val">1,485</div>
+          <div class="rating-chart-placeholder" style="margin-top:20px;">
+            <div class="chart-line"></div>
+            <div class="chart-point" style="left: 80%; top: 40%;"></div>
           </div>
         </div>
-
-        <div>
-          <div class="diff-breakdown">
-            <div class="diff-row">
-              <span class="diff-btn diff-easy">Easy</span>
-              <span class="diff-count" id="d-easy">0</span>
-              <span class="diff-slash">/<span id="d-easy-total">-</span></span>
-            </div>
-            <div class="diff-row">
-              <span class="diff-btn diff-medium">Med.</span>
-              <span class="diff-count" id="d-medium">0</span>
-              <span class="diff-slash">/<span id="d-medium-total">-</span></span>
-            </div>
-            <div class="diff-row">
-              <span class="diff-btn diff-hard">Hard</span>
-              <span class="diff-count" id="d-hard">0</span>
-              <span class="diff-slash">/<span id="d-hard-total">-</span></span>
-            </div>
-          </div>
-          <div class="attempting-row">
-            <span class="attempting-dot"></span>
-            <span id="attempting-count">0</span> Attempting
+        <div class="card dark-card distribution-card" style="margin-bottom:0;">
+          <div class="card-header-small">Top <strong>48.88%</strong></div>
+          <div class="dist-chart" style="margin-top:20px;">
+            <div class="dist-bar" style="height: 30%;"></div>
+            <div class="dist-bar" style="height: 50%;"></div>
+            <div class="dist-bar highlight" style="height: 80%;"></div>
+            <div class="dist-bar" style="height: 45%;"></div>
+            <div class="dist-bar" style="height: 20%;"></div>
           </div>
         </div>
       </div>
 
-      <!-- Badges -->
-      <div class="badges-card">
-        <div class="badges-title">
-          Badges
-          <span style="color:#6366f1; cursor:pointer; font-size:18px;">›</span>
+      <!-- Middle Grid: Solved & Badges -->
+      <div class="dashboard-mid-grid">
+        <!-- Solved ring + difficulty -->
+        <div class="solved-card">
+          <div class="ring-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <!-- track -->
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#f1f5f9" stroke-width="10"/>
+              <!-- easy arc -->
+              <circle id="ring-easy" cx="60" cy="60" r="50" fill="none"
+                stroke="#4ade80" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;"/>
+              <!-- medium arc -->
+              <circle id="ring-medium" cx="60" cy="60" r="50" fill="none"
+                stroke="#fbbf24" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;"/>
+              <!-- hard arc -->
+              <circle id="ring-hard" cx="60" cy="60" r="50" fill="none"
+                stroke="#f87171" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="0 314" style="transition:stroke-dasharray 0.8s ease;"/>
+            </svg>
+            <div class="ring-center">
+              <div class="ring-total"><span id="ring-total-num">0</span><span style="font-size:13px;color:#475569;">/<span id="ring-total-max">0</span></span></div>
+              <div class="ring-label">✓ Solved</div>
+            </div>
+          </div>
+  
+          <div>
+            <div class="diff-breakdown">
+              <div class="diff-row">
+                <span class="diff-btn diff-easy">Easy</span>
+                <span class="diff-count" id="d-easy">0</span>
+                <span class="diff-slash">/<span id="d-easy-total">-</span></span>
+              </div>
+              <div class="diff-row">
+                <span class="diff-btn diff-medium">Med.</span>
+                <span class="diff-count" id="d-medium">0</span>
+                <span class="diff-slash">/<span id="d-medium-total">-</span></span>
+              </div>
+              <div class="diff-row">
+                <span class="diff-btn diff-hard">Hard</span>
+                <span class="diff-count" id="d-hard">0</span>
+                <span class="diff-slash">/<span id="d-hard-total">-</span></span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="badges-count" id="badge-count">1</div>
-        <div class="badge-icon">🏅</div>
-        <div class="badge-recent-label">Most Recent Badge</div>
-        <div class="badge-recent-name" id="badge-name">Active Solver</div>
+  
+        <!-- Badges -->
+        <div class="badges-card">
+          <div class="badges-title">
+            Badges
+            <span style="color:#6366f1; cursor:pointer; font-size:18px;">›</span>
+          </div>
+          <div class="badges-count" id="badge-count">1</div>
+          <div class="badge-icon">
+            <img src="https://assets.leetcode.com/static_assets/others/50_days_badge_2025.png" style="width:60px;" alt="badge">
+          </div>
+          <div class="badge-recent-label">Most Recent Badge</div>
+          <div class="badge-recent-name" id="badge-name">50 Days Badge 2025</div>
+        </div>
       </div>
-
-    </div>
 
     <!-- Submission heatmap -->
     <div class="heatmap-card">
@@ -415,18 +533,24 @@
     <div class="stats-row">
       <div class="dark-card">
         <h3>Progress by Topic</h3>
-        <div id="topic-progress"><div class="loading" style="color:#475569;">Loading...</div></div>
+        <div id="topic-progress">
+          <div class="loading" style="color:#475569;">Loading...</div>
+        </div>
       </div>
       <div class="dark-card">
         <h3>Recent Submissions</h3>
-        <div id="recent-submissions"><div class="loading" style="color:#475569;">Loading...</div></div>
+        <div id="recent-submissions">
+          <div class="loading" style="color:#475569;">Loading...</div>
+        </div>
       </div>
     </div>
 
     <!-- Recommendations -->
     <div class="dark-card" style="margin-bottom:32px;">
       <h3>Recommended for You</h3>
-      <div id="recommendations"><div class="loading" style="color:#475569;">Loading...</div></div>
+      <div id="recommendations">
+        <div class="loading" style="color:#475569;">Loading...</div>
+      </div>
     </div>
 
   </div>
@@ -434,13 +558,14 @@
   <footer class="main-footer">
     <p class="dev-title">Developed by</p>
     <div class="team-names">
-      <a href="#">Akula Vaishnavi</a>
-      <a href="#">Katteboina ShashiNandini</a>
-      <a href="#">Pokala Vigneshwar</a>
+      <a href="https://www.linkedin.com/in/akula-vaishnavi-663873281/">Akula Vaishnavi</a>
+      <a href="https://www.linkedin.com/in/shashinandini-katteboina-0802a62b0/">Katteboina ShashiNandini</a>
+      <a href="https://www.linkedin.com/in/vigneshwar-pokala-14b24931b/">Pokala Vigneshwar</a>
     </div>
   </footer>
 
   <script src="js/api.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
+
 </html>

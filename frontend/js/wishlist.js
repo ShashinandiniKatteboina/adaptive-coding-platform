@@ -110,13 +110,19 @@ async function handleCreateCollection() {
 
   try {
     const res = await wishlist.createCollection(name, isPublic);
-    if (res.id) {
+    // Check for ID in various possible response structures
+    const collectionId = res.id || (res.collection && res.collection.id);
+    
+    if (collectionId) {
       closeModal('collection-modal');
       loadCollections();
+      if (nameEl) nameEl.value = ''; // Reset input
     } else {
-      alert(res.error || 'Failed to create collection');
+      console.error('Create collection failed:', res);
+      alert(res.error || res.message || 'Failed to create collection');
     }
   } catch (err) {
+    console.error('Create collection error:', err);
     alert('Failed to create collection');
   }
 }

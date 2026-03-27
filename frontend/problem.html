@@ -1,11 +1,12 @@
-
 <html>
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Adaptive-Coding-Platform — Problem</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
   <nav class="main-nav">
@@ -17,7 +18,7 @@
 
   <div class="problem-page-container">
     <div class="problem-split-view">
-      
+
       <!-- LEFT SECTION: Description & Submissions -->
       <div class="problem-left-section">
         <div class="section-tabs">
@@ -36,7 +37,7 @@
               </div>
             </div>
             <div id="problem-description" class="markdown-content"></div>
-            
+
             <div class="examples-section">
               <h4>Example Cases</h4>
               <div id="problem-examples"></div>
@@ -66,14 +67,14 @@
             </select>
           </div>
           <div class="editor-actions">
-            <button class="btn-icon" title="Reset Code" onclick="resetCode()">↺</button>
+            <button class="btn-icon" title="Reset Code" onclick="resetCode()">Reset</button>
           </div>
         </div>
 
         <div id="editor-container">
           <div id="editor"></div>
         </div>
-        
+
         <!-- FIXED BOTTOM CONSOLE -->
         <div class="fixed-console">
           <div class="console-tabs" style="display:flex; justify-content:space-between; align-items:center;">
@@ -86,7 +87,7 @@
               <button class="btn btn-primary btn-xs" onclick="submitCode()">Submit</button>
             </div>
           </div>
-          
+
           <div class="console-body">
             <div id="console-output" class="console-pane active">
               <pre id="result-content" class="console-text">Output will appear here...</pre>
@@ -107,4 +108,5 @@
   <script src="js/problem.js"></script>
 
 </body>
+
 </html>
