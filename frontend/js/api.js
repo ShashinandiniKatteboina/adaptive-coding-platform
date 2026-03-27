@@ -1,6 +1,4 @@
-const API_URL = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
-  ? 'http://localhost:5000/api' 
-  : 'https://adaptive-coding-platform.onrender.com/api';
+const API_URL = 'https://adaptive-coding-platform.onrender.com/api';
 
 // save token to localStorage
 function saveToken(token) {
