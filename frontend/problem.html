@@ -16,6 +16,8 @@
     </div>
   </nav>
 
+  <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999;"></div>
+
   <div class="problem-page-container">
     <div class="problem-split-view">
 
@@ -59,15 +61,16 @@
       <div class="problem-right-section">
         <div class="editor-header">
           <div class="language-picker">
-            <select id="language-select" onchange="changeLanguage()">
+            <select id="language-select" onchange="changeLanguage()" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; background: #ffffff; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none;">
               <option value="python">Python</option>
               <option value="java">Java</option>
               <option value="javascript">JavaScript</option>
               <option value="cpp">C++</option>
             </select>
           </div>
-          <div class="editor-actions">
-            <button class="btn-icon" title="Reset Code" onclick="resetCode()">Reset</button>
+          <div class="editor-actions" style="display: flex; gap: 8px;">
+            <button class="btn btn-outline" style="padding: 6px 16px; font-size: 13px; height: 34px; line-height: 1;" onclick="toggleConsole()">Console</button>
+            <button class="btn btn-outline" style="padding: 6px 16px; font-size: 13px; height: 34px; line-height: 1;" title="Reset Code" onclick="resetCode()">Reset</button>
           </div>
         </div>
 
@@ -82,9 +85,9 @@
               <div class="console-tab active" onclick="switchConsoleTab('output')">Console</div>
               <div class="console-tab" onclick="switchConsoleTab('testcases')">Test Cases</div>
             </div>
-            <div class="console-actions" style="padding-right:12px; display:flex; gap:8px;">
-              <button class="btn btn-outline btn-xs" onclick="runCode()">Run</button>
-              <button class="btn btn-primary btn-xs" onclick="submitCode()">Submit</button>
+            <div class="console-actions" style="padding-right:12px; display:flex; gap:12px;">
+              <button class="btn btn-outline" style="padding: 10px 24px; font-size: 15px;" onclick="runCode()">Run</button>
+              <button class="btn btn-primary" style="padding: 10px 24px; font-size: 15px;" onclick="submitCode()">Submit</button>
             </div>
           </div>
 

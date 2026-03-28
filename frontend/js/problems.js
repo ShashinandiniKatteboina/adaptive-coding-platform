@@ -35,6 +35,27 @@ async function loadProblems() {
       return;
     }
 
+    // Merge submissions
+    let userSubmissions = [];
+    if (isLoggedIn()) {
+      userSubmissions = await submissions.getMySubmissions();
+    }
+    const statusMap = {};
+    for (const sub of userSubmissions) {
+      if (sub.status === 'accepted') {
+        statusMap[sub.problem_id] = 'accepted';
+      } else if (statusMap[sub.problem_id] !== 'accepted') {
+        if (sub.status === 'partial') statusMap[sub.problem_id] = 'partial';
+        else statusMap[sub.problem_id] = sub.status;
+      }
+    }
+
+    filteredData.forEach(p => {
+      if (statusMap[p.id]) {
+        p.status = statusMap[p.id];
+      }
+    });
+
     let html = `
       <table class="problems-table">
         <thead>
@@ -51,13 +72,14 @@ async function loadProblems() {
 
     filteredData.forEach((problem) => {
       // Status mapping
-      let statusHtml = '<span class="status-icon status-none"></span>';
+      let statusHtml = '<span class="status-icon" style="border:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg></span>';
+      
       if (problem.status === 'accepted') {
-        statusHtml = '<span class="status-icon status-solved">✓</span>';
+        statusHtml = '<span class="status-icon" style="border:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#22c55e" stroke="none"><circle cx="12" cy="12" r="10"></circle><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 13l3 3 7-7"></path></svg></span>';
       } else if (problem.status === 'wrong_answer' || problem.status === 'wrong') {
-        statusHtml = '<span class="status-icon status-wrong">✗</span>';
+        statusHtml = '<span class="status-icon" style="border:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#ef4444" stroke="none"><circle cx="12" cy="12" r="10"></circle><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6"></path></svg></span>';
       } else if (problem.status === 'partial') {
-        statusHtml = '<span class="status-icon status-partial">!</span>';
+        statusHtml = '<span class="status-icon" style="border:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#f59e0b" stroke="none"><circle cx="12" cy="12" r="10"></circle><path fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8v4M12 16h.01"></path></svg></span>';
       }
 
       html += `

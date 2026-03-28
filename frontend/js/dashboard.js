@@ -26,27 +26,49 @@ function initProfile() {
   }
 }
 
-function editPhoto() {
-  const newUrl = prompt('Enter image URL for your profile photo:');
-  if (newUrl) {
-    const user = getUser();
-    user.profile_url = newUrl;
-    saveUser(user);
-    initProfile();
-    // Also update navbar if needed (renderNavbar is global)
-    if (typeof renderNavbar === 'function') renderNavbar();
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const user = getUser();
+      user.profile_url = e.target.result;
+      saveUser(user);
+      initProfile();
+      if (typeof renderNavbar === 'function') renderNavbar();
+    };
+    reader.readAsDataURL(file);
   }
 }
 
-function editProfile() {
-  const newName = prompt('Enter new display name:', getUser().name);
+function toggleEditProfileDialog() {
+  const dialog = document.getElementById('edit-profile-dialog');
+  if (dialog.style.display === 'none') {
+    const user = getUser();
+    document.getElementById('edit-username-input').value = user.name || '';
+    document.getElementById('edit-email-input').value = user.email || '';
+    dialog.style.display = 'block';
+  } else {
+    dialog.style.display = 'none';
+  }
+}
+
+function saveProfileDetails() {
+  const newName = document.getElementById('edit-username-input').value.trim();
+  const newEmail = document.getElementById('edit-email-input').value.trim();
+  
   if (newName) {
     const user = getUser();
     user.name = newName;
+    if (newEmail) {
+      user.email = newEmail;
+    }
     saveUser(user);
     initProfile();
     if (typeof renderNavbar === 'function') renderNavbar();
   }
+  
+  toggleEditProfileDialog();
 }
 
 // ── Progress / ring / heatmap ──────────────────────────────
@@ -230,7 +252,13 @@ function buildHeatmap(data, filterYear) {
   let yearSubmissions = 0;
 
   for (let w = 0; w < weeksToShow; w++) {
-    gridHTML += '<div class="heatmap-col">';
+    // Add extra margin if it's the first column of a new month (but not the very first column)
+    const colDate = new Date(startDate.getTime() + w * 7 * 86400000);
+    const prevColDate = new Date(startDate.getTime() + (w - 1) * 7 * 86400000);
+    const isNewMonth = w > 0 && colDate.getMonth() !== prevColDate.getMonth();
+    const marginClass = isNewMonth ? 'style="margin-left: 10px;"' : '';
+
+    gridHTML += `<div class="heatmap-col" ${marginClass}>`;
     for (let d = 0; d < 7; d++) {
       const day = new Date(startDate);
       day.setDate(startDate.getDate() + w * 7 + d);
@@ -242,18 +270,39 @@ function buildHeatmap(data, filterYear) {
       if (isInYear) yearSubmissions += cnt;
 
       const heat = cnt === 0 ? 0 : cnt <= 1 ? 1 : cnt <= 3 ? 2 : cnt <= 5 ? 3 : 4;
-      gridHTML += `<div class="heatmap-cell heat-${heat}" title="${key}: ${cnt} submissions"></div>`;
+      
+      const formattedDate = day.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+      const ordinalSuffix = (n) => {
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+      };
+      // Format as target like "December 17th"
+      const dayStr = day.getDate();
+      const monthStr = day.toLocaleDateString('en-US', { month: 'long' });
+      const fancyDate = `${monthStr} ${ordinalSuffix(dayStr)}`;
+      
+      let tooltipText = "No submissions";
+      if (cnt === 1) tooltipText = `1 submission on ${fancyDate}.`;
+      else if (cnt > 1) tooltipText = `${cnt} submissions on ${fancyDate}.`;
+      else tooltipText = `No submissions on ${fancyDate}.`;
+
+      gridHTML += `<div class="heatmap-cell heat-${heat}" title="${tooltipText}"></div>`;
     }
     gridHTML += '</div>';
 
     // Improved Month alignment
-    const colDate = new Date(startDate);
-    colDate.setDate(startDate.getDate() + w * 7);
-    const mo = colDate.getMonth();
+    const colDateMo = new Date(startDate);
+    colDateMo.setDate(startDate.getDate() + w * 7);
+    const mo = colDateMo.getMonth();
+    
     if (mo !== lastMonth) {
       lastMonth = mo;
       const label = colDate.toLocaleDateString('en-US', { month: 'short' });
-      monthsHTML += `<div style="flex: 1; min-width: 0; font-size: 11px; color: #64748b;">${label}</div>`;
+      // To match the gap in the grid, we give min-width instead of flex: 1 when it's just starting, 
+      // but the months display flex already spaces them out. We'll adjust the padding/margin easily here.
+      const mmargin = isNewMonth ? 'margin-left: 10px;' : '';
+      monthsHTML += `<div style="flex: 1; min-width: 0; font-size: 11px; color: #64748b; ${mmargin}">${label}</div>`;
     }
   }
 

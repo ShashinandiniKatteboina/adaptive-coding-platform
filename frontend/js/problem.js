@@ -36,6 +36,47 @@ function switchConsoleTab(tab) {
   document.getElementById(`console-${tab}`).classList.add('active');
 }
 
+function toggleConsole() {
+  const consoleEl = document.querySelector('.fixed-console');
+  if (consoleEl.style.display === 'none') {
+    consoleEl.style.display = 'flex';
+  } else {
+    consoleEl.style.display = 'none';
+  }
+  // Let layout adjust for editor resize
+  setTimeout(() => { if (editor) editor.layout(); }, 50);
+}
+
+function showToast(message, type='success') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.style.background = type === 'success' ? '#dcfce7' : '#fee2e2';
+  toast.style.color = type === 'success' ? '#15803d' : '#b91c1c';
+  toast.style.border = type === 'success' ? '1px solid #86efac' : '1px solid #fca5a5';
+  toast.style.padding = '12px 24px';
+  toast.style.borderRadius = '8px';
+  toast.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)';
+  toast.style.marginBottom = '10px';
+  toast.style.fontWeight = '600';
+  toast.style.opacity = '0';
+  toast.style.transition = 'opacity 0.3s, transform 0.3s';
+  toast.style.transform = 'translateY(-10px)';
+  toast.textContent = message;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '1';
+    toast.style.transform = 'translateY(0)';
+  }, 10);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(-10px)';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
 // initialize Monaco Editor
 require.config({
   paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }
@@ -204,13 +245,40 @@ async function submitCode() {
   try {
     const data = await submissions.submit(currentProblemId, language, code);
     
-    resultContent.innerHTML = `
-      <div style="font-size:18px; font-weight:700; color:${data.status === 'accepted' ? '#22c55e' : '#ef4444'};">
-        ${data.status.toUpperCase()}
+    if (data.status === 'accepted') {
+      showToast('Accepted!', 'success');
+    } else {
+      showToast('Wrong Answer', 'error');
+    }
+
+    const statusColor = data.status === 'accepted' ? '#22c55e' : '#ef4444';
+    const statusText = data.status.replace(/_/g, ' ').toUpperCase();
+    
+    let html = `
+      <div style="font-size:20px; font-weight:800; color:${statusColor}; margin-bottom:16px;">
+        ${statusText}
       </div>
-      <div>Time: ${data.execution_time}s</div>
-      ${data.error ? `<pre style="color:#ef4444; margin-top:8px;">${data.error}</pre>` : ''}
+      
+      <div style="display:flex; gap:12px; margin-bottom:20px;">
+        <div style="background:#f1f5f9; padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; font-size:14px; color:#475569;">
+          <strong>Runtime:</strong> <span style="color:#1e293b; font-weight:600;">${data.execution_time || 'N/A'}s</span>
+        </div>
+        <div style="background:#f1f5f9; padding:8px 16px; border-radius:8px; border:1px solid #e2e8f0; font-size:14px; color:#475569;">
+          <strong>Language:</strong> <span style="color:#1e293b; font-weight:600; text-transform:capitalize;">${language}</span>
+        </div>
+      </div>
     `;
+
+    if (data.error) {
+      html += `
+        <div style="margin-top:16px;">
+          <h4 style="margin-bottom:8px; color:#ef4444; font-size:14px; text-transform:uppercase;">Error Details</h4>
+          <pre style="background:#fee2e2; color:#dc2626; padding:12px; border-radius:8px; border:1px solid #fca5a5; font-size:13px; white-space:pre-wrap; font-family:'JetBrains Mono', 'Fira Code', monospace;">${data.error}</pre>
+        </div>
+      `;
+    }
+
+    resultContent.innerHTML = html;
     
     loadMySubmissions(currentProblemId);
   } catch (err) {
