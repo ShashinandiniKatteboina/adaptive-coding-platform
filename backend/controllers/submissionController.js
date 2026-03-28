@@ -1,4 +1,3 @@
-
 const pool = require('../config/db');
 const { runCode: executeCode } = require('../services/judge0');
 
@@ -6,7 +5,12 @@ exports.runCode = async (req, res) => {
   const { language, code, input } = req.body;
 
   try {
-    const result = await executeCode(code, language, input);
+    // FIX: Safely cast code and input to Strings so Buffer.from() in judge0.js never crashes
+    const safeCode = String(code || '');
+    const safeInput = String(input || '');
+
+    const result = await executeCode(safeCode, language, safeInput);
+    
     res.json({
       stdout: result.stdout,
       stderr: result.stderr,
@@ -26,8 +30,7 @@ exports.submitCode = async (req, res) => {
 
   try {
     const testCases = await pool.query(
-      'SELECT * FROM test_cases WHERE problem_id = $1',
-      [problem_id]
+      'SELECT * FROM test_cases WHERE problem_id = $1',[problem_id]
     );
 
     if (testCases.rows.length === 0) {
@@ -39,8 +42,14 @@ exports.submitCode = async (req, res) => {
     let totalTime = 0;
     let errorDetail = '';
 
+    // FIX: Cast code to string once
+    const safeCode = String(code || '');
+
     for (const tc of testCases.rows) {
-      const result = await executeCode(code, language, tc.input);
+      // FIX: Cast DB input to string so it never passes an Integer to Judge0
+      const safeInput = String(tc.input || '');
+      
+      const result = await executeCode(safeCode, language, safeInput);
 
       if (result.stderr || result.compile_output) {
         allPassed = false;
@@ -49,7 +58,11 @@ exports.submitCode = async (req, res) => {
         break;
       }
 
-      if (result.stdout.trim() !== tc.expected_output.trim()) {
+      // Safely compare outputs by converting both to strings
+      const expectedOut = String(tc.expected_output || '').trim();
+      const actualOut = String(result.stdout || '').trim();
+
+      if (actualOut !== expectedOut) {
         allPassed = false;
         finalStatus = 'wrong_answer';
         break;
@@ -61,15 +74,13 @@ exports.submitCode = async (req, res) => {
     const submission = await pool.query(
       `INSERT INTO submissions
        (user_id, problem_id, language, code, status, execution_time)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [user_id, problem_id, language, code, finalStatus, totalTime]
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,[user_id, problem_id, language, code, finalStatus, totalTime]
     );
 
     if (allPassed) {
       // Logic: Only increment solved count if NOT already solved
       const alreadySolved = await pool.query(
-        'SELECT id FROM submissions WHERE user_id = $1 AND problem_id = $2 AND status = \'accepted\' AND id != $3 LIMIT 1',
-        [user_id, problem_id, submission.rows[0].id]
+        'SELECT id FROM submissions WHERE user_id = $1 AND problem_id = $2 AND status = \'accepted\' AND id != $3 LIMIT 1',[user_id, problem_id, submission.rows[0].id]
       );
 
       const problem = await pool.query(
@@ -88,8 +99,7 @@ exports.submitCode = async (req, res) => {
            DO UPDATE SET
              ${col} = user_progress.${col} + 1,
              total_attempts = user_progress.total_attempts + 1,
-             last_active = NOW()`,
-          [user_id, topic]
+             last_active = NOW()`,[user_id, topic]
         );
       } else {
         // Already solved, just increment total attempts
@@ -121,7 +131,6 @@ exports.submitCode = async (req, res) => {
 exports.getUserSubmissions = async (req, res) => {
   try {
     const result = await pool.query(
-      // We added s.code here so the frontend can receive the submitted code
       `SELECT s.id, p.title, s.language, s.status,
        s.execution_time, s.submitted_at, s.problem_id, s.code
        FROM submissions s
