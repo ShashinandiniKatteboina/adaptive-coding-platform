@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { 
   getCollections, 
+  getCollectionItems,
   createCollection, 
   deleteCollection,
   addItem, 
