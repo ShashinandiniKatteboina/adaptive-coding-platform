@@ -36,8 +36,14 @@
         <!-- Right Panel: Code Editor & Terminal -->
         <div class="coding-panel">
             <div class="editor-controls">
-                <select id="language-select">
-                    <option value="javascript">JavaScript</option>
+            
+                    <select id="language-select" onchange="changeLanguage()" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; background: #ffffff; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none;">
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="javascript">JavaScript</option>
+              <option value="c">C</option>
+              <option value="cpp">C++</option>
+    
                 </select>
                 <button id="run-btn">▶ Run Code</button>
             </div>
