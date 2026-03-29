@@ -3,63 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learning Workspace</title>
-    <link rel="stylesheet" href="workspace.css">
+    <title>Workspace - Adaptive Coding Platform</title>
+    <link rel="stylesheet" href="css/workspace.css">
 </head>
 <body>
+    
+    <!-- Top Nav bar specific to the workspace -->
+    <div class="workspace-header">
+        <button onclick="window.location.href='courses.html'" class="back-btn">← Back to Courses</button>
+        <h2 id="header-title">Loading Course...</h2>
+    </div>
+
     <div class="workspace-container">
-        <!-- Left Panel: Learning Content -->
+        <!-- Left Panel: Video & Editorial -->
         <div class="learning-panel">
             <div class="video-section">
-                <!-- Replace VIDEO_ID with your actual YouTube ID -->
-                <iframe width="100%" height="350" 
-                    src="https://www.youtube.com/embed/Zv67D0nK6S4" 
-                    frameborder="0" allowfullscreen>
-                </iframe>
+                <!-- iframe src will be injected by JavaScript -->
+                <iframe id="course-video" width="100%" height="350" frameborder="0" allowfullscreen></iframe>
             </div>
+            
             <div class="editorial-section">
-                <h1>Arrays & Strings Editorial</h1>
-                <p>Welcome to the tutorial! Watch the video above to learn about sliding windows, then try to implement it in the editor on the right.</p>
+                <h1 id="course-title">Course Title</h1>
+                <p id="course-description">Course description will load here...</p>
+                
                 <hr>
-                <h3>Problem Statement</h3>
-                <p>Write a function that reverses a string in-place.</p>
+                
+                <h3>Task:</h3>
+                <p id="course-task">Listen to the video above and implement your solution on the right.</p>
             </div>
         </div>
 
-        <!-- Right Panel: Code Editor -->
+        <!-- Right Panel: Code Editor & Terminal -->
         <div class="coding-panel">
             <div class="editor-controls">
-                <button id="run-btn">Run Code</button>
+                <select id="language-select">
+                    <option value="javascript">JavaScript</option>
+                </select>
+                <button id="run-btn">▶ Run Code</button>
             </div>
-            <!-- This is where the editor will appear -->
+            
             <div id="editor-container"></div>
-            <div id="console-output">Output will appear here...</div>
+            
+            <div id="console-output">Ready. Write your code and click Run.</div>
         </div>
     </div>
 
-    <!-- Monaco Editor Scripts -->
+    <!-- Load Monaco Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
     <script>
-        // Initialize Monaco Editor
+        // ---------------------------------------------------------
+        // 1. DATA CONFIGURATION (Change your video IDs here!)
+        // ---------------------------------------------------------
+        const courseData = {
+            'arrays': {
+                title: 'Arrays & Strings',
+                videoId: 'PLgUwDviBIf0rENwdL0nEH0uGom9no0nyB ', // REPLACE WITH YOUR REAL YOUTUBE ID (the part after v=)
+                desc: 'In this module, we will learn how to manipulate arrays and strings using the two-pointer technique.',
+                task: 'Write a function that reverses a string in-place.'
+            },
+            'trees': {
+                title: 'Trees & Graphs',
+                videoId: 'oSWTXtMglKE', // REPLACE WITH YOUR REAL YOUTUBE ID
+                desc: 'Learn how to traverse trees using Depth First Search (DFS) and Breadth First Search (BFS).',
+                task: 'Implement an In-Order traversal of a Binary Search Tree.'
+            },
+            'dp': {
+                title: 'Dynamic Programming',
+                videoId: 'oBt53YbR9Kk', // REPLACE WITH YOUR REAL YOUTUBE ID
+                desc: 'Break down complex problems using memoization and tabulation.',
+                task: 'Solve the Fibonacci sequence using Dynamic Programming.'
+            },
+            'linkedlists': {
+                title: 'Linked Lists',
+                videoId: 'Hj_rA0dhr2I', // REPLACE WITH YOUR REAL YOUTUBE ID
+                desc: 'Understand singly and doubly linked lists and how to manipulate nodes.',
+                task: 'Write a function to reverse a singly linked list.'
+            },
+            'stacks': {
+                title: 'Stacks & Queues',
+                videoId: 'wjI1WNcIntg', // REPLACE WITH YOUR REAL YOUTUBE ID
+                desc: 'Explore stack and queue patterns, focusing on LIFO and FIFO methodologies.',
+                task: 'Implement a Queue using two Stacks.'
+            },
+            'sorting': {
+                title: 'Sorting & Searching',
+                videoId: 'RfXrG2-XWWU', // REPLACE WITH YOUR REAL YOUTUBE ID
+                desc: 'Build intuition for algorithms like Quicksort, Mergesort, and Binary Search.',
+                task: 'Write a Binary Search algorithm to find a target number in a sorted array.'
+            }
+        };
+
+        // ---------------------------------------------------------
+        // 2. LOAD CORRECT COURSE CONTENT BASED ON URL
+        // ---------------------------------------------------------
+        // Example URL: workspace.html?course=arrays
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('course') || 'arrays'; // Default to arrays if none found
+        const currentCourse = courseData[courseId];
+
+        if(currentCourse) {
+            document.getElementById('header-title').innerText = currentCourse.title;
+            document.getElementById('course-title').innerText = currentCourse.title;
+            document.getElementById('course-description').innerText = currentCourse.desc;
+            document.getElementById('course-task').innerText = currentCourse.task;
+            // Set Youtube video link dynamically
+            document.getElementById('course-video').src = `https://www.youtube.com/embed/${currentCourse.videoId}`;
+        }
+
+        // ---------------------------------------------------------
+        // 3. INITIALIZE MONACO CODE EDITOR
+        // ---------------------------------------------------------
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
         require(['vs/editor/editor.main'], function() {
             window.editor = monaco.editor.create(document.getElementById('editor-container'), {
-                value: "// Write your code here\nfunction solution() {\n    console.log('Hello from the editor!');\n}\nsolution();",
+                value: `// Implement your solution for ${currentCourse.title}\n\nfunction solution() {\n    console.log("Testing my code!");\n}\n\nsolution();`,
                 language: 'javascript',
                 theme: 'vs-dark',
-                fontSize: 16
+                fontSize: 14,
+                automaticLayout: true // Ensures editor resizes correctly
             });
         });
 
-        // Simple "Run" logic (this runs the code in your browser console for now)
+        // ---------------------------------------------------------
+        // 4. RUN BUTTON LOGIC (Basic JS Execution for demo)
+        // ---------------------------------------------------------
         document.getElementById('run-btn').addEventListener('click', () => {
             const code = window.editor.getValue();
+            const outputConsole = document.getElementById('console-output');
+            
+            outputConsole.innerHTML = "Running...<br>";
+            
+            // Overriding console.log temporarily to capture output in our div
+            const originalLog = console.log;
+            let outputString = "";
+            console.log = function(...args) {
+                outputString += args.join(' ') + "<br>";
+            };
+
             try {
-                eval(code); // Warning: eval is for local demo only
-                document.getElementById('console-output').innerText = "Executed successfully! Check your browser console (F12).";
-            } catch (e) {
-                document.getElementById('console-output').innerText = "Error: " + e.message;
+                // Warning: eval is used here just to run JS purely in the browser for this demo.
+                eval(code); 
+                outputConsole.innerHTML += `<span style="color:#4CAF50;">Output:</span><br>${outputString}`;
+            } catch (error) {
+                outputConsole.innerHTML += `<span style="color:#ff4444;">Error: ${error.message}</span>`;
             }
+
+            // Restore normal console.log
+            console.log = originalLog;
         });
     </script>
 </body>
