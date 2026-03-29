@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Workspace</title>
+    <link rel="stylesheet" href="workspace.css">
+</head>
+<body>
+    <div class="workspace-container">
+        <!-- Left Panel: Learning Content -->
+        <div class="learning-panel">
+            <div class="video-section">
+                <!-- Replace VIDEO_ID with your actual YouTube ID -->
+                <iframe width="100%" height="350" 
+                    src="https://www.youtube.com/embed/Zv67D0nK6S4" 
+                    frameborder="0" allowfullscreen>
+                </iframe>
+            </div>
+            <div class="editorial-section">
+                <h1>Arrays & Strings Editorial</h1>
+                <p>Welcome to the tutorial! Watch the video above to learn about sliding windows, then try to implement it in the editor on the right.</p>
+                <hr>
+                <h3>Problem Statement</h3>
+                <p>Write a function that reverses a string in-place.</p>
+            </div>
+        </div>
+
+        <!-- Right Panel: Code Editor -->
+        <div class="coding-panel">
+            <div class="editor-controls">
+                <button id="run-btn">Run Code</button>
+            </div>
+            <!-- This is where the editor will appear -->
+            <div id="editor-container"></div>
+            <div id="console-output">Output will appear here...</div>
+        </div>
+    </div>
+
+    <!-- Monaco Editor Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+    <script>
+        // Initialize Monaco Editor
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            window.editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: "// Write your code here\nfunction solution() {\n    console.log('Hello from the editor!');\n}\nsolution();",
+                language: 'javascript',
+                theme: 'vs-dark',
+                fontSize: 16
+            });
+        });
+
+        // Simple "Run" logic (this runs the code in your browser console for now)
+        document.getElementById('run-btn').addEventListener('click', () => {
+            const code = window.editor.getValue();
+            try {
+                eval(code); // Warning: eval is for local demo only
+                document.getElementById('console-output').innerText = "Executed successfully! Check your browser console (F12).";
+            } catch (e) {
+                document.getElementById('console-output').innerText = "Error: " + e.message;
+            }
+        });
+    </script>
+</body>
+</html>
