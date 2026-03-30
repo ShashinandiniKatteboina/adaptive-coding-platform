@@ -218,10 +218,47 @@ async function runCode() {
 
   try {
     let resultsHTML = '';
+    const customInputEl = document.getElementById('custom-input-textarea');
+    const customInput = customInputEl ? customInputEl.value.trim() : '';
 
-    if (currentExamples.length === 0) {
-      resultContent.innerHTML = 'No example test cases available to run.';
+    if (currentExamples.length === 0 && !customInput) {
+      resultContent.innerHTML = 'No example test cases or custom input available to run.';
       return;
+    }
+
+    if (customInput) {
+      const data = await submissions.run(language, code, customInput);
+      
+      let customHtml = '';
+      if (data.error) {
+         customHtml = `
+          <div style="margin-bottom: 24px; padding: 12px; border: 1px solid #fca5a5; border-radius: 8px; background: #fee2e2;">
+            <strong style="font-size:15px; color:#b91c1c;">Custom Input: ❌ Server Error</strong><br/>
+            <span style="color: #b91c1c; margin-top:8px; display:inline-block;">${data.error}</span>
+          </div>`;
+      } else if (data.stderr || data.compile_output) {
+        customHtml = `
+          <div style="margin-bottom: 24px;">
+            <strong style="color:#ef4444; font-size:15px;">Custom Input: ❌ Error</strong><br/>
+            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:8px;">${data.stderr || data.compile_output}</pre>
+          </div>
+        `;
+      } else {
+        const actual = String(data.stdout || '');
+        customHtml = `
+          <div style="margin-bottom: 24px; padding: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <strong style="color: #3b82f6; font-size: 15px;">Custom Input Result</strong>
+            <div style="margin-top: 10px; font-size: 13px;">
+              <strong style="color:#64748b; display:block; margin-bottom:4px;">Input:</strong> 
+              <pre style="font-family: 'JetBrains Mono', 'Fira Code', monospace; background:#f1f5f9; padding:8px; border-radius:4px; margin:0 0 12px 0;">${customInput}</pre>
+              
+              <strong style="color:#64748b; display:block; margin-bottom:4px;">Output:</strong> 
+              <pre style="font-family: 'JetBrains Mono', 'Fira Code', monospace; background:#f1f5f9; padding:8px; border-radius:4px; margin:0;">${actual}</pre>
+            </div>
+          </div>
+        `;
+      }
+      resultsHTML += customHtml;
     }
 
     for (let i = 0; i < currentExamples.length; i++) {

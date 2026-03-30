@@ -46,6 +46,7 @@
   </div>
    <script src="js/api.js"></script>
   <!-- Load Monaco Editor -->
+  <script src="js/api.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
   <script>
     // ---------------------------
@@ -105,6 +106,11 @@
 // ---------------------------
     // 5. Run Code with Backend API (Local Judge0)
     // ---------------------------
+<<<<<<< HEAD
+=======
+    // 5. Run Code with Backend API
+    // ---------------------------
+>>>>>>> 9f9f68e (added custom input section)
     document.getElementById('run-btn').addEventListener('click', async () => {
       const code = window.editor.getValue();
       const lang = document.getElementById('language-select').value;
@@ -113,6 +119,7 @@
       outputConsole.innerHTML = "Running...<br>";
 
       try {
+<<<<<<< HEAD
         // This calls the backend '/api/submissions/run' route 
         // which safely communicates with your local Docker Judge0 instance!
         // We pass an empty string "" for input since there are no test cases here.
@@ -130,6 +137,19 @@
         
         if (result.compile_output) {
           outputConsole.innerHTML += `<span style="color:#ff4444;">Compile Output:</span><br><pre style="margin-top:4px; font-family: monospace;">${result.compile_output}</pre>`;
+=======
+        const result = await submissions.run(lang, code, "");
+        
+        if(result.error) {
+          outputConsole.innerHTML += `<span style="color:#ff4444;">Error:</span><br>${result.error}`;
+        } else if(result.stdout) {
+          outputConsole.innerHTML += `<span style="color:#4CAF50;">Output:</span><br>${result.stdout.replace(/\\n/g,"<br>")}`;
+        } else if(result.stderr || result.compile_output) {
+          const errData = result.stderr || result.compile_output;
+          outputConsole.innerHTML += `<span style="color:#ff4444;">Error:</span><br>${errData.replace(/\\n/g,"<br>")}`;
+        } else {
+          outputConsole.innerHTML += `<span style="color:#ff4444;">Error:</span><br>Execution finished with no output.`;
+>>>>>>> 9f9f68e (added custom input section)
         }
 
         // If the code ran but produced absolutely no output or errors
