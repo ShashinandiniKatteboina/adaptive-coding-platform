@@ -218,6 +218,42 @@ async function runCode() {
 
   try {
     let resultsHTML = '';
+    
+    // Check for custom input first
+    const customInputArea = document.getElementById('custom-input-area');
+    const customInput = customInputArea ? customInputArea.value.trim() : '';
+
+    if (customInput) {
+      const data = await submissions.run(language, code, customInput);
+      
+      if (data.error) {
+         resultsHTML = `
+          <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #fca5a5; border-radius: 8px; background: #fee2e2;">
+            <strong>Custom Input:</strong> ❌ Server Error<br/>
+            <span style="color: #b91c1c;">${data.error}</span>
+          </div>`;
+      } else if (data.stderr || data.compile_output) {
+        resultsHTML = `
+          <div style="margin-bottom: 16px;">
+            <strong style="color:#ef4444;">Custom Input: ❌ Error</strong><br/>
+            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:4px; white-space:pre-wrap;">${data.stderr || data.compile_output}</pre>
+          </div>
+        `;
+      } else {
+        const actual = String(data.stdout || '').trim();
+        resultsHTML = `
+          <div style="margin-bottom: 16px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <strong style="color: #3b82f6; font-size: 15px;">Custom Input Result</strong>
+            <div style="margin-top: 8px; font-size: 13px;">
+              <strong style="color:#64748b;">Input:</strong> <span style="font-family: monospace; white-space:pre-wrap;">${customInput}</span><br/>
+              <strong style="color:#64748b;">Output:</strong> <span style="font-family: monospace; white-space:pre-wrap;">${actual}</span>
+            </div>
+          </div>
+        `;
+      }
+      resultContent.innerHTML = resultsHTML;
+      return;
+    }
 
     if (currentExamples.length === 0) {
       resultContent.innerHTML = 'No example test cases available to run.';

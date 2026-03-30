@@ -41,6 +41,10 @@
         <button id="run-btn">▶ Run Code</button>
       </div>
       <div id="editor-container"></div>
+      <div id="custom-input-container" style="padding: 10px; background: #1e1e1e; border-top: 1px solid #333;">
+        <h4 style="margin: 0 0 8px 0; color: #e2e8f0; font-size: 14px; font-weight: 500;">Custom Input</h4>
+        <textarea id="custom-input" placeholder="Enter input here..." style="width: 100%; height: 60px; background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px; font-family: monospace; resize: vertical; box-sizing: border-box;"></textarea>
+      </div>
       <div id="console-output">Ready. Write your code and click Run.</div>
     </div>
   </div>
@@ -108,6 +112,7 @@
     document.getElementById('run-btn').addEventListener('click', async () => {
       const code = window.editor.getValue();
       const lang = document.getElementById('language-select').value;
+      const customInput = document.getElementById('custom-input').value;
       const outputConsole = document.getElementById('console-output');
       
       outputConsole.innerHTML = "Running...<br>";
@@ -115,8 +120,7 @@
       try {
         // This calls the backend '/api/submissions/run' route 
         // which safely communicates with your local Docker Judge0 instance!
-        // We pass an empty string "" for input since there are no test cases here.
-        const result = await submissions.run(lang, code, "");
+        const result = await submissions.run(lang, code, customInput);
 
         outputConsole.innerHTML = ""; // Clear loading text
 
