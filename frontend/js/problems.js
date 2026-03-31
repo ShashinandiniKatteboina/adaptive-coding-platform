@@ -10,9 +10,14 @@ async function loadProblems() {
   container.innerHTML = '<div class="loading">Loading problems...</div>';
 
   try {
-    // Get collection ID from URL if present
+    // Get collection ID or Topic from URL if present
     const params = new URLSearchParams(window.location.search);
     const collectionId = params.get('collection');
+    const topicParam = params.get('topic');
+    
+    if (topicParam && !currentTopic) {
+      currentTopic = decodeURIComponent(topicParam);
+    }
     
     let data;
     if (collectionId) {

@@ -35,17 +35,20 @@ exports.getProgress = async (req, res) => {
       userStats[r.diff] = parseInt(r.solved);
     });
 
-    // 3. Get Topic-wise Progress
+    // 3. Get Topic-wise Progress (All topics in the platform)
     const topicProgressResult = await pool.query(`
       SELECT 
         p.topic, 
-        COUNT(DISTINCT CASE WHEN LOWER(p.difficulty) = 'easy' THEN p.id END) as easy_solved,
-        COUNT(DISTINCT CASE WHEN LOWER(p.difficulty) = 'medium' THEN p.id END) as medium_solved,
-        COUNT(DISTINCT CASE WHEN LOWER(p.difficulty) = 'hard' THEN p.id END) as hard_solved
-      FROM submissions s
-      JOIN problems p ON s.problem_id = p.id
-      WHERE s.user_id = $1 AND LOWER(s.status) = 'accepted'
+        COUNT(DISTINCT p.id) as total_problems,
+        COUNT(DISTINCT CASE WHEN LOWER(s.status) = 'accepted' AND s.user_id = $1 THEN p.id END) as solved_count,
+        COUNT(DISTINCT CASE WHEN LOWER(s.status) = 'accepted' AND s.user_id = $1 AND LOWER(p.difficulty) = 'easy' THEN p.id END) as easy_solved,
+        COUNT(DISTINCT CASE WHEN LOWER(s.status) = 'accepted' AND s.user_id = $1 AND LOWER(p.difficulty) = 'medium' THEN p.id END) as medium_solved,
+        COUNT(DISTINCT CASE WHEN LOWER(s.status) = 'accepted' AND s.user_id = $1 AND LOWER(p.difficulty) = 'hard' THEN p.id END) as hard_solved
+      FROM problems p
+      LEFT JOIN submissions s ON p.id = s.problem_id AND s.user_id = $1
+      WHERE p.topic IS NOT NULL AND p.topic != ''
       GROUP BY p.topic
+      ORDER BY p.topic ASC
     `, [userId]);
 
     res.json({

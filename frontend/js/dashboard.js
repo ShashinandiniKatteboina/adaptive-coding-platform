@@ -77,27 +77,31 @@ async function loadProgress() {
     const data = await progress.getProgress();
     if (!data) return;
 
-    const { stats, platformTotals, topicProgress } = data;
+    const { stats = {}, platformTotals = {}, topicProgress = [] } = data;
 
-    // 1. TOPIC PROGRESS (Dynamic)
+    // 1. TOPIC PROGRESS SUMMARY (Show top 3)
     let topicHTML = '';
     if (!topicProgress || topicProgress.length === 0) {
-      document.getElementById('topic-progress').innerHTML =
-        '<p style="color:#475569; font-size:13px; text-align:center; padding: 20px;">No progress yet. Start solving!</p>';
+      document.getElementById('topic-progress').innerHTML = 
+        '<p style="color:#64748b; font-size:13px;">Complete some problems to see your topic progress!</p>';
     } else {
-      topicProgress.forEach(p => {
-        const totalSolved = parseInt(p.easy_solved || 0) + parseInt(p.medium_solved || 0) + parseInt(p.hard_solved || 0);
-        // Estimate % against a target of 10 for each topic for the visual bar
-        const percent = Math.min(Math.round((totalSolved / 10) * 100), 100);
+      // Sort by solved count to show most active topics first
+      const sortedTopics = [...topicProgress].sort((a,b) => parseInt(b.solved_count||0) - parseInt(a.solved_count||0));
+      const summaryTopics = sortedTopics.slice(0, 3);
+
+      summaryTopics.forEach(p => {
+        const totalSolved = parseInt(p.solved_count || 0);
+        const totalInTopic = parseInt(p.total_problems || 1); 
+        const percent = Math.min(Math.round((totalSolved / totalInTopic) * 100), 100);
 
         topicHTML += `
-          <div style="margin-bottom:16px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="text-transform:capitalize; font-size:14px; font-weight:700; color:#1e293b;">${p.topic}</span>
-              <span style="color:#64748b; font-size:12px;">${p.easy_solved || 0}E · ${p.medium_solved || 0}M · ${p.hard_solved || 0}H</span>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span style="text-transform:capitalize; font-size:13px; font-weight:700; color:#1e293b;">${p.topic}</span>
+              <span style="color:#64748b; font-size:11px;">${totalSolved} / ${totalInTopic} Solved</span>
             </div>
-            <div style="background:#f1f5f9; height:8px; border-radius:8px; overflow:hidden;">
-              <div style="width:${percent}%; background:#6366f1; height:100%; border-radius:8px;"></div>
+            <div style="background:#f1f5f9; height:6px; border-radius:6px; overflow:hidden;">
+              <div style="width:${percent}%; background:#6366f1; height:100%; border-radius:6px;"></div>
             </div>
           </div>`;
       });
@@ -136,10 +140,60 @@ async function loadProgress() {
     const badgeName = totalSolved >= 20 ? 'Gold Badge' : totalSolved >= 10 ? 'Silver Badge' : 'Active Solver';
     document.getElementById('badge-name').textContent = badgeName;
 
+    // Cache for modal
+    cachedTopicData = topicProgress;
+
   } catch (err) {
     console.error('Topic progress load error:', err);
-    document.getElementById('topic-progress').innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center; padding: 20px;">Nothing found yet. Pick a problem to start!</p>';
+    document.getElementById('topic-progress').innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center; padding: 20px;">Pick a problem to start tracking!</p>';
   }
+}
+
+let cachedTopicData = [];
+
+function openTopicModal() {
+  const modal = document.getElementById('topic-details-modal');
+  const listContainer = document.getElementById('modal-topic-list');
+  
+  if (!cachedTopicData || cachedTopicData.length === 0) {
+    listContainer.innerHTML = '<p style="color:#64748b; text-align:center;">No topics found in database.</p>';
+  } else {
+    let html = '';
+    cachedTopicData.forEach(p => {
+      const totalSolved = parseInt(p.solved_count || 0);
+      const totalInTopic = parseInt(p.total_problems || 1);
+      const percent = Math.min(Math.round((totalSolved / totalInTopic) * 100), 100);
+
+      html += `
+        <div style="padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; align-items: center; gap: 16px;">
+          <div style="flex: 1;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+              <span style="font-weight:700; color:#1e293b; text-transform:capitalize;">${p.topic}</span>
+              <span style="color:#64748b; font-size:11px; font-weight:600;">${totalSolved} / ${totalInTopic} SOLVED</span>
+            </div>
+            <div style="background:#e2e8f0; height:8px; border-radius:8px; overflow:hidden;">
+              <div style="width:${percent}%; background:#6366f1; height:100%;"></div>
+            </div>
+            <div style="margin-top:6px; font-size:10px; color:#94a3b8; font-weight:700; text-transform:uppercase;">
+              ${p.easy_solved || 0} Easy · ${p.medium_solved || 0} Med · ${p.hard_solved || 0} Hard
+            </div>
+          </div>
+          <button class="btn btn-primary" style="padding: 8px 16px; font-size: 11px; border-radius: 8px;"
+                  onclick="window.location.href='problems.html?topic=${encodeURIComponent(p.topic)}'">
+            Solve
+          </button>
+        </div>`;
+    });
+    listContainer.innerHTML = html;
+  }
+
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTopicModal() {
+  document.getElementById('topic-details-modal').style.display = 'none';
+  document.body.style.overflow = 'auto';
 }
 
 function setArc(id, filled, total, offset) {

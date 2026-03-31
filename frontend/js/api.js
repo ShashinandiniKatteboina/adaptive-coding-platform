@@ -205,10 +205,9 @@ const progress = {
       const res = await fetch(`${API_URL}/progress`, {
         headers: { 'Authorization': `Bearer ${getToken()}` }
       });
-      if (!res.ok) return [];
-      const data = await safeJson(res);
-      return Array.isArray(data) ? data : [];
-    } catch (e) { return []; }
+      if (!res.ok) return null;
+      return await safeJson(res);
+    } catch (e) { return null; }
   },
 
   getRecommendations: async () => {
