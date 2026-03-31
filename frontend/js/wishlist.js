@@ -72,11 +72,11 @@ async function loadCollections() {
           <tr>
             <td style="padding-left:24px; font-weight:600; color:#1e293b;">${c.name}</td>
             <td style="color:#64748b;">${c.owner_name || 'System'}</td>
-            <td style="color:#64748b;">${c.item_count || 0} items</td>
-            <td style="padding-right:24px; display:flex; justify-content:flex-end; align-items:center; gap:12px;">
+            <td style="color:#1e293b;">${c.item_count || 0} items</td>
+            <td style="padding-left:0; display:flex; justify-content:flex-start; align-items:center; gap:8px;">
               <a href="#" style="color:#6366f1; text-decoration:none; font-weight:500; font-size:14px;" onclick="viewCollection('${c.id}')">View Items</a>
-              <div style="position:relative; padding:4px; margin-top:-4px;" class="table-dots-container" onclick="toggleDotsMenu(event, 'shared-${c.id}')">
-                <span style="cursor:pointer; font-weight:bold; font-size:22px; color:#64748b; padding-left:4px;">⋮</span>
+              <div style="position:relative; margin-top:2px;" class="table-dots-container" onclick="toggleDotsMenu(event, 'shared-${c.id}')">
+                <span style="cursor:pointer; font-weight:bold; font-size:18px; color:#64748b; padding:0 4px;">⋮</span>
                 <div class="dropdown-menu" id="dropdown-shared-${c.id}" style="right:0; top:36px; min-width:150px;">
                   <div class="dropdown-item delete" onclick="event.stopPropagation(); handleUnfollowCollection('${c.id}')">Remove / Unfollow</div>
                 </div>

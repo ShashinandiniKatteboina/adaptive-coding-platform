@@ -21,8 +21,7 @@
 
   <div class="problem-page-container">
     <div class="problem-split-view">
-
-      <!-- LEFT SECTION: Description & Submissions -->
+      <!-- LEFT SECTION (Tabs & Content) -->
       <div class="problem-left-section">
         <div class="section-tabs">
           <div class="section-tab active" onclick="switchLeftTab('statement')">Problem Statement</div>
@@ -52,7 +51,7 @@
         <div id="tab-content-submissions" class="tab-pane">
           <div class="submissions-container">
             <h4>History</h4>
-            <div id="submissions-list">
+            <div id="submissions-list" style="overflow-y:auto; max-height:calc(100vh - 200px);">
               <p class="empty-state">No submissions yet.</p>
             </div>
           </div>
@@ -60,56 +59,30 @@
 
         <div id="tab-content-solutions" class="tab-pane">
           <div class="solutions-explorer">
-            <!-- Col 1: Time Stacks -->
-            <div class="solutions-sidebar">
-              <h4>Time Stacks</h4>
-              <div id="time-stacks-list">
-                <p class="empty-state">No solutions available yet.</p>
-              </div>
+            <div id="time-stacks-list" class="solutions-stacks">
+              <p class="empty-state">Loading stacks...</p>
             </div>
-            
-            <!-- Col 2: Solutions Deck -->
-            <div class="solutions-deck">
-              <div id="solutions-deck-header" style="display:none;">
-                <h4 id="selected-time-label">Solutions</h4>
+            <div id="solutions-deck-pane" class="solutions-deck">
+              <div id="solutions-deck-header" style="display: none;">
+                <h4 id="selected-time-label">Solutions: 0.0s</h4>
               </div>
               <div id="solutions-deck-list">
                 <p class="empty-state">Select a time stack.</p>
-              </div>
-            </div>
-
-            <!-- Col 3: Code Viewer -->
-            <div class="solutions-code-view">
-              <div id="solutions-code-header" style="display:none;">
-                <div class="code-author-info">
-                  <span id="view-author-name" style="font-weight:700; color:var(--text-main);"></span>
-                  <span id="view-author-meta" style="font-size:12px; color:var(--text-muted);"></span>
-                </div>
-                <button class="btn btn-xs btn-primary" onclick="restoreFromSolutions()" style="margin-left:auto;">
-                  Restore to Editor
-                </button>
-              </div>
-              <div class="code-editor-mock">
-                <pre id="solutions-code-display" class="code-block" style="margin:0; height:100%; overflow:auto; padding:16px; font-size:13px;"></pre>
-                <div id="solutions-code-placeholder" class="empty-state" style="height:100%; display:flex; align-items:center; justify-content:center;">
-                  Select a solution to preview code
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- RIGHT SECTION: Editor -->
+      <!-- RIGHT SECTION (Main Editor) -->
       <div class="problem-right-section">
         <div class="editor-header">
-          <div class="language-picker">
-            <select id="language-select" onchange="changeLanguage()" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; background: #ffffff; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none;">
+          <div class="editor-actions">
+            <select id="language-select" onchange="changeLanguage()">
               <option value="python">Python</option>
               <option value="java">Java</option>
+              <option value="cpp">C++ (GCC 13.2.0)</option>
               <option value="javascript">JavaScript</option>
-              <option value="c">C</option>
-              <option value="cpp">C++</option>
             </select>
           </div>
           <div class="editor-actions" style="display: flex; gap: 8px;">
@@ -154,38 +127,36 @@
   </div>
 
 
-  <!-- SUBMISSION MODAL -->
-  <div id="submission-modal" class="modal-overlay" style="display:none;">
-    <div class="modal-content large-modal">
-      <div class="modal-header">
-        <div style="display:flex; flex-direction:column;">
-          <h3 style="margin:0; font-size:18px;">Submission Details</h3>
-          <span id="modal-status" class="badge" style="margin-top:4px; font-size:11px; width:fit-content;"></span>
+  <!-- Submission Details Modal -->
+  <div id="submission-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="background: #ffffff; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+          <h3 id="modal-title" style="margin: 0; font-size: 18px; color: #1e293b; font-weight: 700;">Submission Details</h3>
+          <span id="modal-status" class="badge" style="width: fit-content; font-size: 11px;">Accepted</span>
         </div>
-        <div style="display:flex; align-items:center; gap:16px;">
-          <button class="btn btn-outline btn-xs" onclick="restoreToEditor()" style="height:32px; font-size:12px; font-weight:600; border-color:#6366f1; color:#6366f1;">
-            Restore to Editor
-          </button>
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <button class="btn btn-outline" style="border-color: #6366f1; color: #6366f1; font-weight: 600; font-size: 13px;" onclick="restoreToEditor()">Restore to Editor</button>
           <button class="close-btn" onclick="closeSubmissionModal()">&times;</button>
         </div>
       </div>
-      <div class="modal-body">
-        <div class="submission-info-bar">
-          <div class="info-item">
-            <span class="label">Language</span>
-            <span id="modal-language" class="value"></span>
+      <div class="modal-body" style="padding: 0; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+        <div class="submission-info-bar" style="background: #f8fafc; padding: 12px 24px; display: flex; gap: 32px; border-bottom: 1px solid #e2e8f0;">
+          <div class="info-item" style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">Language</span>
+            <span id="modal-language" style="color: #1e293b; font-weight: 600; font-size: 14px;">Python</span>
           </div>
-          <div class="info-item">
-            <span class="label">Runtime</span>
-            <span id="modal-runtime" class="value"></span>
+          <div class="info-item" style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">Runtime</span>
+            <span id="modal-runtime" style="color: #1e293b; font-weight: 600; font-size: 14px;">0.02s</span>
           </div>
-          <div class="info-item">
-            <span class="label">Submitted At</span>
-            <span id="modal-date" class="value"></span>
+          <div class="info-item" style="display: flex; flex-direction: column; gap: 2px;">
+            <span style="font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 700;">Submitted At</span>
+            <span id="modal-date" style="color: #1e293b; font-weight: 600; font-size: 14px;">March 30, 2024</span>
           </div>
         </div>
-        <div class="code-viewer-container">
-          <pre id="modal-code" class="code-block"></pre>
+        <div class="code-viewer-container" style="flex: 1; background: #0f172a; padding: 20px; overflow: auto;">
+          <pre id="modal-code" class="code-block" style="color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.6; margin: 0;"></pre>
         </div>
       </div>
     </div>

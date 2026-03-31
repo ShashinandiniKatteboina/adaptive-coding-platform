@@ -611,9 +611,42 @@ nav .nav-links a:hover {
 .badge-medium{ background: transparent !important; color: #f59e0b !important; }
 .badge-hard  { background: transparent !important; color: #ef4444 !important; }
 .topic-badge, .topic-tag { background: transparent !important; color: #64748b; font-size: 13px; font-weight: 500; }
-.badge-accepted   { background: #dcfce7 !important; color: #16a34a !important; }
-.badge-wrong_answer { background: #fee2e2 !important; color: #dc2626 !important; }
-.badge-error      { background: #f3e8ff !important; color: #9333ea !important; }
+.status-badge-accepted { 
+  background: #dcfce7 !important; 
+  color: #16a34a !important; 
+  padding: 4px 10px; 
+  border-radius: 6px; 
+  font-size: 11px; 
+  font-weight: 700;
+  display: inline-block;
+}
+.status-badge-wrong_answer { 
+  background: #fee2e2 !important; 
+  color: #dc2626 !important; 
+  padding: 4px 10px; 
+  border-radius: 6px; 
+  font-size: 11px; 
+  font-weight: 700;
+  display: inline-block;
+}
+.status-badge-error { 
+  background: #f3e8ff !important; 
+  color: #9333ea !important; 
+  padding: 4px 10px; 
+  border-radius: 6px; 
+  font-size: 11px; 
+  font-weight: 700;
+  display: inline-block;
+}
+.status-badge-time_limit_exceeded { 
+  background: #fff7ed !important; 
+  color: #c2410c !important; 
+  padding: 4px 10px; 
+  border-radius: 6px; 
+  font-size: 11px; 
+  font-weight: 700;
+  display: inline-block;
+}
 
 /* PROBLEM DETAIL PAGE */
 /* PROBLEM DETAIL PAGE - NEW LAYOUT */
@@ -627,6 +660,12 @@ nav .nav-links a:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   height: 100%;
+}
+
+.problem-solutions-explorer {
+    display: grid;
+    grid-template-columns: 240px 1fr; /* 2 columns: Stacks and Solutions */
+    height: 600px;
 }
 
 .problem-left-section {
@@ -1499,22 +1538,36 @@ body.dark-mode .logout-link { color: #94a3b8; }
 }
 
 .solutions-deck {
-  width: 240px;
-  flex-shrink: 0;
+  width: 100%;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
   padding: 16px;
-  border-right: 1px solid var(--border);
   overflow-y: auto;
   background: var(--surface);
 }
 
-.solutions-code-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #f8fafc;
-  overflow: hidden;
+.solutions-explorer {
+    display: grid;
+    grid-template-columns: 200px 1fr; /* 2 columns: Time Stacks and Solutions List */
+    height: 600px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.solutions-stacks {
+    padding: 20px;
+    background: #f8fafc;
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+}
+
+.solutions-deck {
+    padding: 20px;
+    background: #ffffff;
+    overflow-y: auto;
 }
 
 .code-editor-mock {
@@ -1598,7 +1651,7 @@ body.dark-mode .logout-link { color: #94a3b8; }
 
 .deck-user-lang {
   font-size: 10px;
-  color: #64748b;
+  color: #1e293b; /* Changed from gray to black */
   text-transform: capitalize;
 }
 
@@ -1771,4 +1824,13 @@ body.dark-mode .info-item .value {
 
 body.dark-mode .submission-item:hover {
   background: #0f172a !important;
+}
+
+/* Ensure overall readability in modals and cards */
+.modal-content {
+    color: #1e293b !important;
+}
+
+.submission-item span {
+    color: #1e293b !important;
 }

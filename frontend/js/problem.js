@@ -205,20 +205,23 @@ async function loadMySubmissions(problemId) {
 
     let html = '';
     currentSubmissions.forEach((s) => {
-      const dateStr = new Date(s.submitted_at).toLocaleString();
-      // Added onclick and title for better UX
+      // Format date to: DD/MM/YYYY, HH:MM:SS
+      const d = new Date(s.submitted_at);
+      const dateStr = d.toLocaleDateString('en-GB') + ', ' + d.toLocaleTimeString('en-GB');
+      
       html += `
         <div class="submission-item" 
              onclick="showSubmissionCode('${s.id}')" 
-             title="Click to view code"
-             style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #f1f5f9; font-size:14px;">
+             style="display:flex; justify-content:space-between; align-items:flex-start; padding:16px 0; border-bottom:1px solid #f1f5f9; cursor:pointer; transition: background 0.2s;">
+          
           <div style="display:flex; flex-direction:column; gap:4px;">
-            <span class="status-badge-${s.status.toLowerCase()}" style="font-weight:600;">${s.status.replace(/_/g, ' ').toUpperCase()}</span>
-            <span style="color:#64748b; font-size:12px;">Runtime: ${s.execution_time || 'N/A'}s</span>
+            <div class="status-badge-${s.status.toLowerCase()}">${s.status.replace(/_/g, ' ').toUpperCase()}</div>
+            <div style="color:#64748b; font-size:12px; margin-top:2px;">Runtime: ${s.execution_time || 'N/A'}s</div>
           </div>
+
           <div style="display:flex; flex-direction:column; gap:4px; text-align:right;">
-            <span style="color:#64748b; text-transform:capitalize; font-weight:500;">${s.language}</span>
-            <span style="color:#94a3b8; font-size:12px;">${dateStr}</span>
+            <div style="color:#1e293b; font-weight:600; font-size:14px; text-transform:capitalize;">${s.language}</div>
+            <div style="color:#94a3b8; font-size:12px;">${dateStr}</div>
           </div>
         </div>
       `;
@@ -511,7 +514,7 @@ function renderSolutionDeck(time) {
   // Highlight active stack
   document.querySelectorAll('.time-stack').forEach(s => {
     s.classList.remove('active');
-    if (s.innerText.trim() === time) s.classList.add('active');
+    if (s.innerText.includes(time)) s.classList.add('active');
   });
 
   deckHeader.style.display = 'flex';
@@ -521,7 +524,7 @@ function renderSolutionDeck(time) {
   let html = '';
   solutions.forEach(s => {
     html += `
-      <div class="solution-card" id="sol-card-${s.id}" onclick="viewSolutionInPane('${s.id}')">
+      <div class="solution-card" id="sol-card-${s.id}" onclick="showSubmissionCode('${s.id}', true)">
         <span class="deck-user-name">${s.user_name}</span>
         <span class="deck-user-lang">${s.language}</span>
       </div>
@@ -530,45 +533,6 @@ function renderSolutionDeck(time) {
   deckList.innerHTML = html;
 }
 
-function viewSolutionInPane(submissionId) {
-  const solution = allProblemSolutions.find(s => String(s.id) === String(submissionId));
-  if (!solution) return;
-  
-  selectedSolutionForView = solution;
-
-  // Highlight active card
-  document.querySelectorAll('.solution-card').forEach(c => c.classList.remove('active'));
-  document.getElementById(`sol-card-${submissionId}`)?.classList.add('active');
-
-  const header = document.getElementById('solutions-code-header');
-  const placeholder = document.getElementById('solutions-code-placeholder');
-  const display = document.getElementById('solutions-code-display');
-  
-  const nameEl = document.getElementById('view-author-name');
-  const metaEl = document.getElementById('view-author-meta');
-
-  // Update Content
-  header.style.display = 'flex';
-  placeholder.style.display = 'none';
-  display.style.display = 'block';
-  
-  nameEl.innerText = solution.user_name;
-  metaEl.innerText = ` • ${solution.language} • ${new Date(solution.submitted_at).toLocaleDateString()}`;
-  display.textContent = solution.code;
-}
-
-function restoreFromSolutions() {
-  if (!selectedSolutionForView || !editor) return;
-  
-  const { code, language } = selectedSolutionForView;
-  
-  // Update Editor
-  document.getElementById('language-select').value = language;
-  monaco.editor.setModelLanguage(editor.getModel(), language);
-  editor.setValue(code);
-  
-  showToast('Solution restored to editor', 'success');
-}
 
 function backToStacks() {
   renderTimeStacks();
@@ -593,15 +557,17 @@ function showSubmissionCode(submissionId, isPublic = false) {
   const langEl = document.getElementById('modal-language');
   const runtimeEl = document.getElementById('modal-runtime');
   const dateEl = document.getElementById('modal-date');
+  const titleEl = document.getElementById('modal-title');
 
   // Set Content
   codeEl.textContent = submission.code || '// No code found for this submission';
   
-  // Public solutions are always accepted
   if (isPublic) {
+    titleEl.textContent = `Solution by ${submission.user_name}`;
     statusEl.textContent = 'ACCEPTED';
     statusEl.className = 'badge status-badge-accepted';
   } else {
+    titleEl.textContent = 'Submission Details';
     statusEl.textContent = submission.status.replace(/_/g, ' ').toUpperCase();
     statusEl.className = `badge status-badge-${submission.status.toLowerCase()}`;
   }
@@ -612,13 +578,13 @@ function showSubmissionCode(submissionId, isPublic = false) {
 
   // Show Modal
   modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden'; // Prevent background scroll
+  document.body.style.overflow = 'hidden'; 
 }
 
 function closeSubmissionModal() {
   const modal = document.getElementById('submission-modal');
   modal.style.display = 'none';
-  document.body.style.overflow = 'auto'; // Restore scroll
+  document.body.style.overflow = 'auto';
   currentViewingSubmission = null;
 }
 
@@ -627,23 +593,19 @@ function restoreToEditor() {
 
   const { code, language } = currentViewingSubmission;
   
-  // 1. Update the language select
   const langSelect = document.getElementById('language-select');
   if (langSelect) {
     langSelect.value = language;
-    // Trigger Monaco language update
-    monaco.editor.setModelLanguage(editor.getModel(), language);
+    const model = editor.getModel();
+    if (model) monaco.editor.setModelLanguage(model, language);
   }
 
-  // 2. Set the code in editor
   editor.setValue(code);
 
-  // 3. Notify user and close modal
   showToast('Code restored to editor!', 'success');
   closeSubmissionModal();
 }
 
-// Close modal on click outside content
 window.addEventListener('click', function(event) {
   const modal = document.getElementById('submission-modal');
   if (event.target === modal) {
