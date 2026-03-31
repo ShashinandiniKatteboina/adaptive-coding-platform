@@ -101,6 +101,20 @@ async function loadProblems() {
     });
 
     html += '</tbody></table>';
+    // Dynamic Topics Sidebar logic
+    const topicListEl = document.getElementById('topic-list');
+    if (topicListEl) {
+      const allTopics = [...new Set(data.map(p => p.topic).filter(Boolean))];
+      allTopics.sort();
+      
+      let topicHtml = `<div class="topic-item ${currentTopic === '' ? 'active' : ''}" onclick="filterByTopic('')">All Topics</div>`;
+      allTopics.forEach(t => {
+        const isActive = currentTopic === t ? 'active' : '';
+        topicHtml += `<div class="topic-item ${isActive}" onclick="filterByTopic('${t}')">${t}</div>`;
+      });
+      topicListEl.innerHTML = topicHtml;
+    }
+
     container.innerHTML = html;
 
   } catch (err) {

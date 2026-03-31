@@ -120,8 +120,12 @@ async function loadProblem() {
 
     document.title = `Random — ${problem.title}`;
     document.getElementById('problem-title').textContent = problem.title;
-     // Fix: Convert literal \n text from database into actual line breaks
-    const cleanDescription = (problem.description || '').replace(/\\n/g, '\n');
+    // Fix: Convert literal \n text AND HTML <br> tags from database into actual line breaks
+    let cleanDescription = (problem.description || '')
+      .replace(/<br\s*[\/]?>/gi, '\n') // Handle <br>, <br/>, etc.
+      .replace(/<[\/]?b>/gi, '')         // Remove <b> tags for consistency with innerText
+      .replace(/\\n/g, '\n');           // Handle literal \n strings
+
     const descEl = document.getElementById('problem-description');
     if (descEl) {
       descEl.innerText = cleanDescription;
@@ -191,10 +195,22 @@ function renderExamples() {
   }
 
   currentExamples.forEach((ex, i) => {
+    const inputClean = (ex.input || '').replace(/\\n/g, '\n');
+    const outputClean = (ex.expected_output || '').replace(/\\n/g, '\n');
+
     examplesDiv.innerHTML += `
-      <div class="example-box" style="margin-bottom:12px; padding:14px; background:#f8fafc; border-radius:8px; border-left:3px solid #6366f1;">
-        <strong style="color:#64748b; font-size:12px; text-transform:uppercase;">Example ${i + 1}</strong>
-        <pre style="margin-top:8px; background:#f1f5f9; padding:8px; border-radius:4px; font-size:13px; white-space:pre-wrap;">Input: ${ex.input}\n\nOutput: ${ex.expected_output}</pre>
+      <div class="test-case-item" style="margin-bottom: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; border-left: 4px solid #6366f1;">
+        <div style="padding: 10px 16px; background: #ffffff; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Example ${i + 1}</div>
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="background: rgba(255,255,255,0.6); padding: 12px; border-radius: 8px;">
+             <div style="font-size: 12px; color: #1e293b; font-weight: 700; margin-bottom: 6px;">Input:</div>
+             <pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; white-space: pre-wrap;">${inputClean}</pre>
+          </div>
+          <div style="background: rgba(255,255,255,0.6); padding: 12px; border-radius: 8px;">
+             <div style="font-size: 12px; color: #1e293b; font-weight: 700; margin-bottom: 6px;">Output:</div>
+             <pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #334155; white-space: pre-wrap;">${outputClean}</pre>
+          </div>
+        </div>
       </div>
     `;
   });
@@ -407,6 +423,13 @@ async function submitCode() {
     const data = await submissions.submit(currentProblemId, language, code);
     let statusText = data.status.replace(/_/g, ' ').toUpperCase();
     let errorDetails = data.error || '';
+
+    // Set status color based on result
+    let statusColor = '#1e293b'; // Default black
+    if (data.status === 'accepted') statusColor = '#16a34a'; // Green
+    else if (data.status === 'wrong_answer') statusColor = '#ef4444'; // Red
+    else if (data.status === 'error' || data.status === 'runtime_error') statusColor = '#8b5cf6'; // Purple
+    else if (data.status === 'time_limit_exceeded') statusColor = '#f59e0b'; // Orange
 
     // Catch the python specific infinite loop output error
     if (errorDetails.includes('File too large')) {

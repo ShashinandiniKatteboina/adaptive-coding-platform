@@ -75,29 +75,28 @@ function saveProfileDetails() {
 async function loadProgress() {
   try {
     const data = await progress.getProgress();
+    if (!data) return;
 
-    let totalEasy = 0, totalMedium = 0, totalHard = 0;
+    const { stats, platformTotals, topicProgress } = data;
+
+    // 1. TOPIC PROGRESS (Dynamic)
     let topicHTML = '';
-
-    if (!data || data.length === 0) {
+    if (!topicProgress || topicProgress.length === 0) {
       document.getElementById('topic-progress').innerHTML =
-        '<p style="color:#475569; font-size:13px;">No progress yet. Start solving!</p>';
+        '<p style="color:#475569; font-size:13px; text-align:center; padding: 20px;">No progress yet. Start solving!</p>';
     } else {
-      data.forEach(p => {
-        totalEasy   += (p.easy_solved   || 0);
-        totalMedium += (p.medium_solved || 0);
-        totalHard   += (p.hard_solved   || 0);
-
-        const total = (p.easy_solved || 0) + (p.medium_solved || 0) + (p.hard_solved || 0);
-        const percent = Math.min(Math.round((total / 20) * 100), 100);
+      topicProgress.forEach(p => {
+        const totalSolved = parseInt(p.easy_solved || 0) + parseInt(p.medium_solved || 0) + parseInt(p.hard_solved || 0);
+        // Estimate % against a target of 10 for each topic for the visual bar
+        const percent = Math.min(Math.round((totalSolved / 10) * 100), 100);
 
         topicHTML += `
           <div style="margin-bottom:16px;">
             <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="text-transform:capitalize; font-size:14px; font-weight:600; color:#1e293b;">${p.topic}</span>
-              <span style="color:#64748b; font-size:12px;">${p.easy_solved||0}E · ${p.medium_solved||0}M · ${p.hard_solved||0}H</span>
+              <span style="text-transform:capitalize; font-size:14px; font-weight:700; color:#1e293b;">${p.topic}</span>
+              <span style="color:#64748b; font-size:12px;">${p.easy_solved || 0}E · ${p.medium_solved || 0}M · ${p.hard_solved || 0}H</span>
             </div>
-            <div style="background:#f1f5f9; height:8px; border-radius:8px;">
+            <div style="background:#f1f5f9; height:8px; border-radius:8px; overflow:hidden;">
               <div style="width:${percent}%; background:#6366f1; height:100%; border-radius:8px;"></div>
             </div>
           </div>`;
@@ -105,48 +104,41 @@ async function loadProgress() {
       document.getElementById('topic-progress').innerHTML = topicHTML;
     }
 
-    const total = totalEasy + totalMedium + totalHard;
-    // Approximate total problems in platform
-    const easyTotal = 933, medTotal = 2030, hardTotal = 916;
-    const maxTotal = easyTotal + medTotal + hardTotal;
-    const circ = 2 * Math.PI * 50; // circumference for r=50
+    // 2. TOTAL COUNTS (System Dynamic)
+    const totalSolved = (stats.easy || 0) + (stats.medium || 0) + (stats.hard || 0);
+    const totalPlatform = (platformTotals.easy || 0) + (platformTotals.medium || 0) + (platformTotals.hard || 0);
+    const circ = 2 * Math.PI * 50;
 
-    // Update ring center text
-    document.getElementById('ring-total-num').textContent = total;
-    document.getElementById('ring-total-max').textContent = maxTotal;
+    document.getElementById('ring-total-num').textContent = totalSolved;
+    document.getElementById('ring-total-max').textContent = totalPlatform;
 
-    // Difficulty numbers
-    document.getElementById('d-easy').textContent   = totalEasy;
-    document.getElementById('d-medium').textContent = totalMedium;
-    document.getElementById('d-hard').textContent   = totalHard;
-    document.getElementById('d-easy-total').textContent   = easyTotal;
-    document.getElementById('d-medium-total').textContent = medTotal;
-    document.getElementById('d-hard-total').textContent   = hardTotal;
+    // Difficulty labels
+    document.getElementById('d-easy').textContent = stats.easy || 0;
+    document.getElementById('d-medium').textContent = stats.medium || 0;
+    document.getElementById('d-hard').textContent = stats.hard || 0;
 
-    // Animated arcs — stack them with dashoffset
-    const easyFrac   = (totalEasy   / maxTotal) * circ;
-    const medFrac    = (totalMedium / maxTotal) * circ;
-    const hardFrac   = (totalHard   / maxTotal) * circ;
-    const easyOffset  = 0;
-    const medOffset   = easyFrac;
-    const hardOffset  = easyFrac + medFrac;
+    document.getElementById('d-easy-total').textContent = platformTotals.easy || 0;
+    document.getElementById('d-medium-total').textContent = platformTotals.medium || 0;
+    document.getElementById('d-hard-total').textContent = platformTotals.hard || 0;
 
+    // Ring animation
+    const easyFrac = ((stats.easy || 0) / (totalPlatform || 1)) * circ;
+    const medFrac = ((stats.medium || 0) / (totalPlatform || 1)) * circ;
+    const hardFrac = ((stats.hard || 0) / (totalPlatform || 1)) * circ;
+    
     setTimeout(() => {
-      setArc('ring-easy',   easyFrac,  circ, easyOffset);
-      setArc('ring-medium', medFrac,   circ, medOffset);
-      setArc('ring-hard',   hardFrac,  circ, hardOffset);
+      setArc('ring-easy', easyFrac || 0, circ, 0);
+      setArc('ring-medium', medFrac || 0, circ, easyFrac);
+      setArc('ring-hard', hardFrac || 0, circ, easyFrac + medFrac);
     }, 100);
 
-    // Badge name based on total
-    const badgeName = total >= 100 ? '100 Days Badge' : total >= 50 ? '50 Days Badge 2025' : 'Active Solver';
+    // Badge
+    const badgeName = totalSolved >= 20 ? 'Gold Badge' : totalSolved >= 10 ? 'Silver Badge' : 'Active Solver';
     document.getElementById('badge-name').textContent = badgeName;
 
-    // Attempting = topics with partial progress
-    const attempting = data.filter(p => (p.easy_solved||0)+(p.medium_solved||0)+(p.hard_solved||0) > 0).length;
-    document.getElementById('attempting-count').textContent = attempting;
-
   } catch (err) {
-    document.getElementById('topic-progress').innerHTML = '<p style="color:#ef4444;">Failed to load progress.</p>';
+    console.error('Topic progress load error:', err);
+    document.getElementById('topic-progress').innerHTML = '<p style="color:#ef4444; font-size:13px; text-align:center; padding: 20px;">Nothing found yet. Pick a problem to start!</p>';
   }
 }
 
@@ -181,12 +173,15 @@ async function loadRecentSubmissions() {
     let html = '';
     recent.forEach(s => {
       const date = new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      const statusColor = s.status === 'accepted' ? '#4ade80' : s.status === 'partial' ? '#fbbf24' : '#f87171';
+      const statusClass = `status-badge-${s.status.toLowerCase()}`;
+      
       html += `
-        <div class="sub-row submission-item" onclick="showSubmissionCode('${s.id}')" title="Click to view code" style="cursor:pointer; transition:all 0.2s; padding:12px 8px; border-radius:8px;">
-          <span class="sub-title">${s.title || 'Problem #' + s.problem_id}</span>
-          <span style="color:${statusColor}; font-size:12px; font-weight:600;">${s.status.toUpperCase()}</span>
-          <span class="sub-date">${date}</span>
+        <div class="sub-row submission-item" onclick="showSubmissionCode('${s.id}')" title="Click to view code" style="cursor:pointer; transition:all 0.2s; padding:12px 8px; border-radius:8px; display: flex; justify-content: space-between; align-items: center;">
+          <span class="sub-title" style="flex: 1; font-weight: 600; color: #1e293b;">${s.title || 'Problem #' + s.problem_id}</span>
+          <div style="width: 130px; text-align: center;">
+            <span class="${statusClass}" style="transform: scale(0.9); font-size: 10px;">${s.status.toUpperCase()}</span>
+          </div>
+          <span class="sub-date" style="width: 70px; text-align: right; color: #64748b; font-size: 12px;">${date}</span>
         </div>`;
     });
     container.innerHTML = html;
