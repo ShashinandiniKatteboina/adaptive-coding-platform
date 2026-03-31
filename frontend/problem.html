@@ -27,6 +27,7 @@
         <div class="section-tabs">
           <div class="section-tab active" onclick="switchLeftTab('statement')">Problem Statement</div>
           <div class="section-tab" onclick="switchLeftTab('submissions')">Submissions</div>
+          <div class="section-tab" onclick="switchLeftTab('solutions')">Solutions</div>
         </div>
 
         <div id="tab-content-statement" class="tab-pane active">
@@ -53,6 +54,47 @@
             <h4>History</h4>
             <div id="submissions-list">
               <p class="empty-state">No submissions yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <div id="tab-content-solutions" class="tab-pane">
+          <div class="solutions-explorer">
+            <!-- Col 1: Time Stacks -->
+            <div class="solutions-sidebar">
+              <h4>Time Stacks</h4>
+              <div id="time-stacks-list">
+                <p class="empty-state">No solutions available yet.</p>
+              </div>
+            </div>
+            
+            <!-- Col 2: Solutions Deck -->
+            <div class="solutions-deck">
+              <div id="solutions-deck-header" style="display:none;">
+                <h4 id="selected-time-label">Solutions</h4>
+              </div>
+              <div id="solutions-deck-list">
+                <p class="empty-state">Select a time stack.</p>
+              </div>
+            </div>
+
+            <!-- Col 3: Code Viewer -->
+            <div class="solutions-code-view">
+              <div id="solutions-code-header" style="display:none;">
+                <div class="code-author-info">
+                  <span id="view-author-name" style="font-weight:700; color:var(--text-main);"></span>
+                  <span id="view-author-meta" style="font-size:12px; color:var(--text-muted);"></span>
+                </div>
+                <button class="btn btn-xs btn-primary" onclick="restoreFromSolutions()" style="margin-left:auto;">
+                  Restore to Editor
+                </button>
+              </div>
+              <div class="code-editor-mock">
+                <pre id="solutions-code-display" class="code-block" style="margin:0; height:100%; overflow:auto; padding:16px; font-size:13px;"></pre>
+                <div id="solutions-code-placeholder" class="empty-state" style="height:100%; display:flex; align-items:center; justify-content:center;">
+                  Select a solution to preview code
+                </div>
+              </div>
             </div>
           </div>
         </div>

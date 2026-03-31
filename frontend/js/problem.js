@@ -6,6 +6,9 @@ let currentExamples = [];
 let currentProblemLabels =[];
 let currentSubmissions =[];
 let currentViewingSubmission = null;
+let allProblemSolutions = [];
+let groupedSolutions = {};
+let selectedSolutionForView = null;
 
 const defaultCode = {
   python: '# Write your solution here\n\n',
@@ -26,6 +29,10 @@ function switchLeftTab(tab) {
 
   event.target.classList.add('active');
   document.getElementById(`tab-content-${tab}`).classList.add('active');
+
+  if (tab === 'solutions') {
+    loadSolutions();
+  }
 }
 
 // CONSOLE TAB SWITCHING
@@ -442,8 +449,140 @@ function resetCode() {
 }
 
 // SUBMISSION MODAL LOGIC
-function showSubmissionCode(submissionId) {
-  const submission = currentSubmissions.find(s => String(s.id) === String(submissionId));
+// SOLUTIONS LOGIC
+async function loadSolutions() {
+  const container = document.getElementById('time-stacks-list');
+  container.innerHTML = '<p class="loading">Loading solutions...</p>';
+  
+  try {
+    const data = await submissions.getSolutions(currentProblemId);
+    allProblemSolutions = data;
+
+    if (allProblemSolutions.length === 0) {
+      container.innerHTML = '<p class="empty-state">No accepted solutions yet.</p>';
+      return;
+    }
+
+    // Group by execution time
+    groupedSolutions = {};
+    allProblemSolutions.forEach(s => {
+      const timeLabel = (s.execution_time || '0.00') + 's';
+      if (!groupedSolutions[timeLabel]) {
+        groupedSolutions[timeLabel] = [];
+      }
+      groupedSolutions[timeLabel].push(s);
+    });
+
+    renderTimeStacks();
+  } catch (err) {
+    container.innerHTML = '<p class="error-msg">Failed to load solutions.</p>';
+  }
+}
+
+function renderTimeStacks() {
+  const container = document.getElementById('time-stacks-list');
+  const deckList = document.getElementById('solutions-deck-list');
+  const deckHeader = document.getElementById('solutions-deck-header');
+  
+  deckList.innerHTML = '<p class="empty-state">Select a time stack to view solutions.</p>';
+  deckHeader.style.display = 'none';
+
+  // Sort keys (times) ascending
+  const sortedTimes = Object.keys(groupedSolutions).sort((a, b) => parseFloat(a) - parseFloat(b));
+
+  let html = '';
+  sortedTimes.forEach(time => {
+    const count = groupedSolutions[time].length;
+    html += `
+      <div class="time-stack" onclick="renderSolutionDeck('${time}')">
+        <span style="font-weight:700; font-size:16px;">${time}</span>
+        ${count > 1 ? `<span class="stacked-indicator">${count}</span>` : ''}
+      </div>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function renderSolutionDeck(time) {
+  const deckList = document.getElementById('solutions-deck-list');
+  const deckHeader = document.getElementById('solutions-deck-header');
+  const timeLabel = document.getElementById('selected-time-label');
+  
+  // Highlight active stack
+  document.querySelectorAll('.time-stack').forEach(s => {
+    s.classList.remove('active');
+    if (s.innerText.trim() === time) s.classList.add('active');
+  });
+
+  deckHeader.style.display = 'flex';
+  timeLabel.innerText = `Solutions: ${time}`;
+  
+  const solutions = groupedSolutions[time];
+  let html = '';
+  solutions.forEach(s => {
+    html += `
+      <div class="solution-card" id="sol-card-${s.id}" onclick="viewSolutionInPane('${s.id}')">
+        <span class="deck-user-name">${s.user_name}</span>
+        <span class="deck-user-lang">${s.language}</span>
+      </div>
+    `;
+  });
+  deckList.innerHTML = html;
+}
+
+function viewSolutionInPane(submissionId) {
+  const solution = allProblemSolutions.find(s => String(s.id) === String(submissionId));
+  if (!solution) return;
+  
+  selectedSolutionForView = solution;
+
+  // Highlight active card
+  document.querySelectorAll('.solution-card').forEach(c => c.classList.remove('active'));
+  document.getElementById(`sol-card-${submissionId}`)?.classList.add('active');
+
+  const header = document.getElementById('solutions-code-header');
+  const placeholder = document.getElementById('solutions-code-placeholder');
+  const display = document.getElementById('solutions-code-display');
+  
+  const nameEl = document.getElementById('view-author-name');
+  const metaEl = document.getElementById('view-author-meta');
+
+  // Update Content
+  header.style.display = 'flex';
+  placeholder.style.display = 'none';
+  display.style.display = 'block';
+  
+  nameEl.innerText = solution.user_name;
+  metaEl.innerText = ` • ${solution.language} • ${new Date(solution.submitted_at).toLocaleDateString()}`;
+  display.textContent = solution.code;
+}
+
+function restoreFromSolutions() {
+  if (!selectedSolutionForView || !editor) return;
+  
+  const { code, language } = selectedSolutionForView;
+  
+  // Update Editor
+  document.getElementById('language-select').value = language;
+  monaco.editor.setModelLanguage(editor.getModel(), language);
+  editor.setValue(code);
+  
+  showToast('Solution restored to editor', 'success');
+}
+
+function backToStacks() {
+  renderTimeStacks();
+}
+
+// Updated showSubmissionCode to handle both My Submissions and Public Solutions
+function showSubmissionCode(submissionId, isPublic = false) {
+  let submission;
+  if (isPublic) {
+    submission = allProblemSolutions.find(s => String(s.id) === String(submissionId));
+  } else {
+    submission = currentSubmissions.find(s => String(s.id) === String(submissionId));
+  }
+  
   if (!submission) return;
   
   currentViewingSubmission = submission;
@@ -458,8 +597,14 @@ function showSubmissionCode(submissionId) {
   // Set Content
   codeEl.textContent = submission.code || '// No code found for this submission';
   
-  statusEl.textContent = submission.status.replace(/_/g, ' ').toUpperCase();
-  statusEl.className = `badge status-badge-${submission.status.toLowerCase()}`;
+  // Public solutions are always accepted
+  if (isPublic) {
+    statusEl.textContent = 'ACCEPTED';
+    statusEl.className = 'badge status-badge-accepted';
+  } else {
+    statusEl.textContent = submission.status.replace(/_/g, ' ').toUpperCase();
+    statusEl.className = `badge status-badge-${submission.status.toLowerCase()}`;
+  }
   
   langEl.textContent = submission.language;
   runtimeEl.textContent = (submission.execution_time || '0.00') + 's';

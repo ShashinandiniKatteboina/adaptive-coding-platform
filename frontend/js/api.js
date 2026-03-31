@@ -185,6 +185,16 @@ const submissions = {
       const data = await safeJson(res);
       return Array.isArray(data) ? data : [];
     } catch (e) { return []; }
+  },
+  getSolutions: async (problemId) => {
+    try {
+      const res = await fetch(`${API_URL}/submissions/solutions/${problemId}`, {
+        headers: { 'Authorization': `Bearer ${getToken()}` }
+      });
+      if (!res.ok) return [];
+      const data = await safeJson(res);
+      return Array.isArray(data) ? data : [];
+    } catch (e) { return []; }
   }
 };
 

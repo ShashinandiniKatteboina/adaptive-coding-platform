@@ -78,7 +78,34 @@ exports.submitCode = async (req, res) => {
     );
 
     if (allPassed) {
-      // Logic: Only increment solved count if NOT already solved
+      // 1. Get user name for the solutions table
+      const userResult = await pool.query('SELECT name FROM users WHERE id = $1', [user_id]);
+      const user_name = userResult.rows[0]?.name || 'Unknown';
+
+      // 2. ONLY store the fastest solution for this user and problem
+      const existingSolution = await pool.query(
+        'SELECT id, execution_time FROM solutions WHERE user_id = $1 AND problem_id = $2',
+        [user_id, problem_id]
+      );
+
+      if (existingSolution.rows.length === 0) {
+        // No solution yet, insert
+        await pool.query(
+          `INSERT INTO solutions (user_id, problem_id, user_name, language, code, execution_time)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [user_id, problem_id, user_name, language, code, totalTime]
+        );
+      } else if (totalTime < existingSolution.rows[0].execution_time) {
+        // New solution is faster, update
+        await pool.query(
+          `UPDATE solutions SET
+           language = $1, code = $2, execution_time = $3, submitted_at = NOW()
+           WHERE id = $4`,
+          [language, code, totalTime, existingSolution.rows[0].id]
+        );
+      }
+
+      // Existing logic to increment solved count...
       const alreadySolved = await pool.query(
         'SELECT id FROM submissions WHERE user_id = $1 AND problem_id = $2 AND status = \'accepted\' AND id != $3 LIMIT 1',[user_id, problem_id, submission.rows[0].id]
       );
@@ -140,6 +167,22 @@ exports.getUserSubmissions = async (req, res) => {
     );
     res.json(result.rows);
   } catch (err) {
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getProblemSolutions = async (req, res) => {
+  const { problemId } = req.params;
+  try {
+    const result = await pool.query(
+      `SELECT id, execution_time, code, language, submitted_at, user_name
+       FROM solutions
+       WHERE problem_id = $1
+       ORDER BY execution_time ASC, submitted_at DESC`, [problemId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'Server Error' });
   }
 };
