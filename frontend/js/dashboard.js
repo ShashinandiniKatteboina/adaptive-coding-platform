@@ -183,7 +183,7 @@ async function loadRecentSubmissions() {
       const date = new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const statusColor = s.status === 'accepted' ? '#4ade80' : s.status === 'partial' ? '#fbbf24' : '#f87171';
       html += `
-        <div class="sub-row">
+        <div class="sub-row submission-item" onclick="showSubmissionCode('${s.id}')" title="Click to view code" style="cursor:pointer; transition:all 0.2s; padding:12px 8px; border-radius:8px;">
           <span class="sub-title">${s.title || 'Problem #' + s.problem_id}</span>
           <span style="color:${statusColor}; font-size:12px; font-weight:600;">${s.status.toUpperCase()}</span>
           <span class="sub-date">${date}</span>
@@ -342,3 +342,62 @@ async function loadRecommendations() {
 }
 
 loadDashboard();
+
+// SUBMISSION MODAL LOGIC
+let currentViewingSubmission = null;
+
+function showSubmissionCode(submissionId) {
+  const submission = allSubmissions.find(s => String(s.id) === String(submissionId));
+  if (!submission) return;
+  
+  currentViewingSubmission = submission;
+
+  const modal = document.getElementById('submission-modal');
+  const codeEl = document.getElementById('modal-code');
+  const statusEl = document.getElementById('modal-status');
+  const langEl = document.getElementById('modal-language');
+  const runtimeEl = document.getElementById('modal-runtime');
+  const dateEl = document.getElementById('modal-date');
+
+  // Set Content
+  codeEl.textContent = submission.code || '// No code found for this submission';
+  
+  statusEl.textContent = submission.status.replace(/_/g, ' ').toUpperCase();
+  statusEl.className = `badge status-badge-${submission.status.toLowerCase()}`;
+  
+  langEl.textContent = submission.language;
+  runtimeEl.textContent = (submission.execution_time || '0.00') + 's';
+  dateEl.textContent = new Date(submission.submitted_at).toLocaleString();
+
+  // Show Modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden'; 
+}
+
+function closeSubmissionModal() {
+  const modal = document.getElementById('submission-modal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = 'auto';
+  currentViewingSubmission = null;
+}
+
+function restoreToEditor() {
+  if (!currentViewingSubmission) return;
+
+  const { code, language, problem_id } = currentViewingSubmission;
+  
+  // Store code in sessionStorage to be picked up by problem.html
+  sessionStorage.setItem('pending_restore_code', code);
+  sessionStorage.setItem('pending_restore_language', language);
+
+  // Redirect to the problem page
+  window.location.href = `problem.html?id=${problem_id}`;
+}
+
+// Close modal on click outside
+window.addEventListener('click', function(event) {
+  const modal = document.getElementById('submission-modal');
+  if (event.target === modal) {
+    closeSubmissionModal();
+  }
+});

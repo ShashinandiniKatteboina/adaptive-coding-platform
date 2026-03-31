@@ -122,6 +122,13 @@
         // which safely communicates with your local Docker Judge0 instance!
         const result = await submissions.run(lang, code, customInput);
 
+        // Catch python specific infinite loop output error
+        if ((result.stderr || '').includes('File too large') || (result.error || '').includes('File too large')) {
+          result.status = 'Time Limit Exceeded';
+          result.stderr = 'Your code produced too much output. This is likely due to an infinite loop causing a Time/Output Limit Exceeded.';
+          result.error = null;
+        }
+
         outputConsole.innerHTML = ""; // Clear loading text
 
         if (result.stdout) {
@@ -136,8 +143,13 @@
           outputConsole.innerHTML += `<span style="color:#ff4444;">Compile Output:</span><br><pre style="margin-top:4px; font-family: monospace;">${result.compile_output}</pre>`;
         }
 
-        // If the code ran but produced absolutely no output or errors
-        if (!result.stdout && !result.stderr && !result.compile_output) {
+        if (result.status && result.status !== 'Accepted') {
+          outputConsole.innerHTML += `<div style="margin-top: 8px;"><span style="color:#ff4444; font-weight:bold;">Status: ${result.status}</span></div>`;
+          if (result.time) {
+            outputConsole.innerHTML += `<div><span style="color:#94a3b8;">Execution Time: ${result.time}s</span></div>`;
+          }
+        } else if (!result.stdout && !result.stderr && !result.compile_output) {
+          // If the code ran but produced absolutely no output or errors
           outputConsole.innerHTML = `<span style="color:#94a3b8;">Status: ${result.status || 'No output produced'}</span>`;
         }
 

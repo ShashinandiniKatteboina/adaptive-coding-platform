@@ -501,6 +501,44 @@
     </div>
   </footer>
 
+
+  <!-- SUBMISSION MODAL -->
+  <div id="submission-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content large-modal">
+      <div class="modal-header">
+        <div style="display:flex; flex-direction:column;">
+          <h3 style="margin:0; font-size:18px;">Submission Details</h3>
+          <span id="modal-status" class="badge" style="margin-top:4px; font-size:11px; width:fit-content;"></span>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <button class="btn btn-outline btn-xs" onclick="restoreToEditor()" style="height:32px; font-size:12px; font-weight:600; border-color:#6366f1; color:#6366f1;">
+            Restore to Editor
+          </button>
+          <button class="close-btn" onclick="closeSubmissionModal()">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="submission-info-bar">
+          <div class="info-item">
+            <span class="label">Language</span>
+            <span id="modal-language" class="value"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">Runtime</span>
+            <span id="modal-runtime" class="value"></span>
+          </div>
+          <div class="info-item">
+            <span class="label">Submitted At</span>
+            <span id="modal-date" class="value"></span>
+          </div>
+        </div>
+        <div class="code-viewer-container">
+          <pre id="modal-code" class="code-block"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/api.js"></script>
   <script src="js/dashboard.js"></script>
 </body>

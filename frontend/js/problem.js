@@ -5,6 +5,7 @@ let currentProblemId;
 let currentExamples = [];
 let currentProblemLabels =[];
 let currentSubmissions =[];
+let currentViewingSubmission = null;
 
 const defaultCode = {
   python: '# Write your solution here\n\n',
@@ -140,6 +141,23 @@ async function loadProblem() {
       :[];
 
     renderExamples();
+    
+    // CHECK FOR PENDING RESTORE (from Dashboard)
+    const pendingCode = sessionStorage.getItem('pending_restore_code');
+    const pendingLang = sessionStorage.getItem('pending_restore_language');
+    
+    if (pendingCode && pendingLang && editor) {
+      document.getElementById('language-select').value = pendingLang;
+      monaco.editor.setModelLanguage(editor.getModel(), pendingLang);
+      editor.setValue(pendingCode);
+      
+      // Clear after applying
+      sessionStorage.removeItem('pending_restore_code');
+      sessionStorage.removeItem('pending_restore_language');
+      
+      showToast('Restored from submission history', 'success');
+    }
+
     loadMySubmissions(id);
 
   } catch (err) {
@@ -181,8 +199,12 @@ async function loadMySubmissions(problemId) {
     let html = '';
     currentSubmissions.forEach((s) => {
       const dateStr = new Date(s.submitted_at).toLocaleString();
+      // Added onclick and title for better UX
       html += `
-        <div class="submission-item" style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #f1f5f9; font-size:14px;">
+        <div class="submission-item" 
+             onclick="showSubmissionCode('${s.id}')" 
+             title="Click to view code"
+             style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #f1f5f9; font-size:14px;">
           <div style="display:flex; flex-direction:column; gap:4px;">
             <span class="status-badge-${s.status.toLowerCase()}" style="font-weight:600;">${s.status.replace(/_/g, ' ').toUpperCase()}</span>
             <span style="color:#64748b; font-size:12px;">Runtime: ${s.execution_time || 'N/A'}s</span>
@@ -226,17 +248,34 @@ async function runCode() {
     if (customInput) {
       const data = await submissions.run(language, code, customInput);
       
-      if (data.error) {
+      let isTLE = false;
+      let errData = data.stderr || data.compile_output || '';
+      
+      // Catch infinite loops in Python which hit file size limits
+      if (errData && errData.includes('File too large')) {
+         data.status = 'Time Limit Exceeded';
+         errData = 'Your code produced too much output. This is likely due to an infinite loop causing a Time/Output Limit Exceeded.';
+         isTLE = true;
+      }
+
+      if (data.error && !isTLE) {
          resultsHTML = `
           <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #fca5a5; border-radius: 8px; background: #fee2e2;">
             <strong>Custom Input:</strong> ❌ Server Error<br/>
             <span style="color: #b91c1c;">${data.error}</span>
           </div>`;
-      } else if (data.stderr || data.compile_output) {
+      } else if (errData && !isTLE) {
         resultsHTML = `
           <div style="margin-bottom: 16px;">
             <strong style="color:#ef4444;">Custom Input: ❌ Error</strong><br/>
-            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:4px; white-space:pre-wrap;">${data.stderr || data.compile_output}</pre>
+            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:4px; white-space:pre-wrap;">${errData}</pre>
+          </div>
+        `;
+      } else if ((data.status && data.status !== 'Accepted') || isTLE) {
+        resultsHTML = `
+          <div style="margin-bottom: 16px;">
+            <strong style="color:#ef4444;">Custom Input: ❌ ${data.status}</strong><br/>
+            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:4px; white-space:pre-wrap;">${isTLE ? errData : `Execution Time: ${data.time || 'N/A'}s`}</pre>
           </div>
         `;
       } else {
@@ -274,15 +313,37 @@ async function runCode() {
          continue;
       }
 
+      let isTLE = false;
+      let errData = data.stderr || data.compile_output || '';
+      
+      // Catch infinite loops in Python which hit file size limits
+      if (errData && errData.includes('File too large')) {
+         data.status = 'Time Limit Exceeded';
+         errData = 'Your code produced too much output. This is likely due to an infinite loop causing a Time/Output Limit Exceeded.';
+         isTLE = true;
+      }
+
       // Catch Code Execution Syntax/Compilation Errors
-      if (data.stderr || data.compile_output) {
+      if (errData && !isTLE) {
         resultsHTML += `
           <div style="margin-bottom: 16px;">
             <strong style="color:#ef4444;">Case ${i + 1}: ❌ Error</strong><br/>
-            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:4px;">${data.stderr || data.compile_output}</pre>
+            <pre style="background:#fee2e2; color:#dc2626; padding:8px; border-radius:4px; margin-top:4px;">${errData}</pre>
           </div>
         `;
         break; // Stop execution on syntax error
+      }
+
+      if ((data.status && data.status !== 'Accepted') || isTLE) {
+        resultsHTML += `
+          <div style="margin-bottom: 16px; padding: 12px; border: 1px solid #fca5a5; border-radius: 8px; background: #fee2e2;">
+            <strong style="color:#b91c1c; font-size: 15px;">Case ${i + 1}: ❌ ${data.status}</strong><br/>
+            <div style="margin-top: 8px; font-size: 13px; color: #7f1d1d;">
+              ${isTLE ? `<strong>Reason:</strong> ${errData}` : `<strong>Execution Time:</strong> ${data.time || 'N/A'}s`}
+            </div>
+          </div>
+        `;
+        break; // Stop execution on TLE or other errors
       }
 
       // Safely cast to string to avoid `.trim()` TypeError on numbers/null
@@ -326,14 +387,23 @@ async function submitCode() {
 
   try {
     const data = await submissions.submit(currentProblemId, language, code);
-    if (data.status === 'accepted') {
-      showToast('Accepted!', 'success');
-    } else {
-      showToast('Wrong Answer', 'error');
-    }
+    let statusText = data.status.replace(/_/g, ' ').toUpperCase();
+    let errorDetails = data.error || '';
 
-    const statusColor = data.status === 'accepted' ? '#22c55e' : '#ef4444';
-    const statusText = data.status.replace(/_/g, ' ').toUpperCase();
+    // Catch the python specific infinite loop output error
+    if (errorDetails.includes('File too large')) {
+      data.status = 'time_limit_exceeded';
+      statusColor = '#ef4444';
+      statusText = 'TIME LIMIT EXCEEDED';
+      errorDetails = 'Your code produced too much output. This is likely due to an infinite loop causing a Time/Output Limit Exceeded.';
+      showToast('Time Limit Exceeded', 'error');
+    } else {
+      if (data.status === 'accepted') {
+        showToast('Accepted!', 'success');
+      } else {
+        showToast(statusText || 'Wrong Answer', 'error');
+      }
+    }
     
     let html = `
       <div style="font-size:20px; font-weight:800; color:${statusColor}; margin-bottom:16px;">
@@ -350,11 +420,11 @@ async function submitCode() {
       </div>
     `;
 
-    if (data.error) {
+    if (errorDetails) {
       html += `
         <div style="margin-top:16px;">
           <h4 style="margin-bottom:8px; color:#ef4444; font-size:14px; text-transform:uppercase;">Error Details</h4>
-          <pre style="background:#fee2e2; color:#dc2626; padding:12px; border-radius:8px; border:1px solid #fca5a5; font-size:13px; white-space:pre-wrap; font-family:'JetBrains Mono', 'Fira Code', monospace;">${data.error}</pre>
+          <pre style="background:#fee2e2; color:#dc2626; padding:12px; border-radius:8px; border:1px solid #fca5a5; font-size:13px; white-space:pre-wrap; font-family:'JetBrains Mono', 'Fira Code', monospace;">${errorDetails}</pre>
         </div>
       `;
     }
@@ -370,3 +440,68 @@ function resetCode() {
   const lang = document.getElementById('language-select').value;
   editor.setValue(defaultCode[lang]);
 }
+
+// SUBMISSION MODAL LOGIC
+function showSubmissionCode(submissionId) {
+  const submission = currentSubmissions.find(s => String(s.id) === String(submissionId));
+  if (!submission) return;
+  
+  currentViewingSubmission = submission;
+
+  const modal = document.getElementById('submission-modal');
+  const codeEl = document.getElementById('modal-code');
+  const statusEl = document.getElementById('modal-status');
+  const langEl = document.getElementById('modal-language');
+  const runtimeEl = document.getElementById('modal-runtime');
+  const dateEl = document.getElementById('modal-date');
+
+  // Set Content
+  codeEl.textContent = submission.code || '// No code found for this submission';
+  
+  statusEl.textContent = submission.status.replace(/_/g, ' ').toUpperCase();
+  statusEl.className = `badge status-badge-${submission.status.toLowerCase()}`;
+  
+  langEl.textContent = submission.language;
+  runtimeEl.textContent = (submission.execution_time || '0.00') + 's';
+  dateEl.textContent = new Date(submission.submitted_at).toLocaleString();
+
+  // Show Modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden'; // Prevent background scroll
+}
+
+function closeSubmissionModal() {
+  const modal = document.getElementById('submission-modal');
+  modal.style.display = 'none';
+  document.body.style.overflow = 'auto'; // Restore scroll
+  currentViewingSubmission = null;
+}
+
+function restoreToEditor() {
+  if (!currentViewingSubmission || !editor) return;
+
+  const { code, language } = currentViewingSubmission;
+  
+  // 1. Update the language select
+  const langSelect = document.getElementById('language-select');
+  if (langSelect) {
+    langSelect.value = language;
+    // Trigger Monaco language update
+    monaco.editor.setModelLanguage(editor.getModel(), language);
+  }
+
+  // 2. Set the code in editor
+  editor.setValue(code);
+
+  // 3. Notify user and close modal
+  showToast('Code restored to editor!', 'success');
+  closeSubmissionModal();
+}
+
+// Close modal on click outside content
+window.addEventListener('click', function(event) {
+  const modal = document.getElementById('submission-modal');
+  if (event.target === modal) {
+    closeSubmissionModal();
+  }
+});
