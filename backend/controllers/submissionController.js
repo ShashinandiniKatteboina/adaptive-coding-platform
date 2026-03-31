@@ -79,12 +79,12 @@ exports.submitCode = async (req, res) => {
 
     if (allPassed) {
       // 1. Get user name for the solutions table
-      const userResult = await pool.query('SELECT name FROM users WHERE id = $1', [user_id]);
+      const userResult = await pool.query('SELECT name FROM users WHERE id = $1::uuid', [user_id]);
       const user_name = userResult.rows[0]?.name || 'Unknown';
 
       // 2. ONLY store the fastest solution for this user and problem
       const existingSolution = await pool.query(
-        'SELECT id, execution_time FROM solutions WHERE user_id = $1 AND problem_id = $2',
+        'SELECT id, execution_time FROM solutions WHERE user_id = $1::uuid AND problem_id = $2',
         [user_id, problem_id]
       );
 
@@ -92,15 +92,15 @@ exports.submitCode = async (req, res) => {
         // No solution yet, insert
         await pool.query(
           `INSERT INTO solutions (user_id, problem_id, user_name, language, code, execution_time)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
+           VALUES ($1::uuid, $2, $3, $4, $5, $6)`,
           [user_id, problem_id, user_name, language, code, totalTime]
         );
-      } else if (totalTime < existingSolution.rows[0].execution_time) {
+      } else if (totalTime < parseFloat(existingSolution.rows[0].execution_time)) {
         // New solution is faster, update
         await pool.query(
           `UPDATE solutions SET
            language = $1, code = $2, execution_time = $3, submitted_at = NOW()
-           WHERE id = $4`,
+           WHERE id = $4::uuid`,
           [language, code, totalTime, existingSolution.rows[0].id]
         );
       }
@@ -184,5 +184,34 @@ exports.getProblemSolutions = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+// Force-Sync Solutions Migration
+exports.syncSolutions = async (req, res) => {
+  try {
+    console.log('--- Manual Sync: Migrating accepted submissions to solutions table ---');
+    
+    // Clear the table to avoid duplication and start fresh during sync
+    await pool.query('DELETE FROM solutions');
+
+    const result = await pool.query(`
+      INSERT INTO solutions (user_id, problem_id, user_name, language, code, execution_time, submitted_at)
+      SELECT DISTINCT ON (s.user_id, s.problem_id) 
+             s.user_id::uuid, s.problem_id, u.name, s.language, s.code, s.execution_time, s.submitted_at
+      FROM submissions s
+      JOIN users u ON s.user_id::uuid = u.id::uuid
+      WHERE s.status ILIKE 'accepted'
+      ORDER BY s.user_id::uuid, s.problem_id, s.execution_time ASC
+    `);
+
+    res.json({ 
+      success: true, 
+      message: 'Migration successful',
+      rowsSynced: result.rowCount
+    });
+  } catch (err) {
+    console.error('Migration failed:', err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
